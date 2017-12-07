@@ -425,7 +425,17 @@ var OptionScene = {
 var GameScene = { 	
 	maze : ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(10,10,5)),
 	SL : 120, 																								// SideLength
+	SLPlus : 121,
+	HalfSL : 60,
 	FixedSL : 120,
+	HalfFixedSL : 60,
+	SkillGrid1X : innerWidth - 3*this.HalfFixSL,
+	SkillGrid2X : innerWidth - this.HalfFixSL,
+	SkillGridY : innerHeight - this.HalfFixSL,
+	SkillCDLoopRadius : 1.2*this.HalfFixSL,
+	CenterGridLeftTopX : centerX - this.HalfSL,
+	CenterGridLeftTopY : centerY - this.HalfSL,
+
 	// times : 0,
 	ViewScope : "unknown",
 	ChangeItemAnimationRequest : false,
@@ -435,9 +445,18 @@ var GameScene = {
 	ItemChangeDirection :　"unknown",
 	SetSL : function(ArgSL) {
 		this.SL = ArgSL;
+		this.SLPlus = this.SL + 1;
+		this.HalfSL = this.SL/2;
+		this.CenterGridLeftTopX = centerX - this.HalfSL;
+		this.CenterGridLeftTopY = centerY - this.HalfSL;
 	},
 	SetFixedSL : function(ArgSL) {
 		this.FixedSL = ArgSL;
+		this.HalfFixedSL = this.FixedSL/2;
+		this.SkillGrid1X = innerWidth - 3*this.HalfFixedSL;
+		this.SkillGrid2X = innerWidth - this.HalfFixedSL;
+		this.SkillGridY = innerHeight - this.HalfFixedSL;
+		this.SkillCDLoopRadius = 1.2*this.HalfFixedSL;
 	},
 	UpdateMaze : function(length, width, height) {
 		this.maze = ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(length, width, height));
@@ -478,19 +497,23 @@ var GameScene = {
 	},
 
 	UpdateViewScope : function(role) {
-		var offsetX = role.getX() - Math.floor(role.getX());
-		var offsetY = role.getY() - Math.floor(role.getY());
+		var RoleFloorX = Math.floor(role.getX());
+		var RoleFloorY = Math.floor(role.getY());
+		var RoleIntZ = Math.round(role.getZ());
+		var offsetX = role.getX() - RoleFloorX;
+		var offsetY = role.getY() - RoleFloorY;
 		var offsetZ = role.getZ() - Math.floor(role.getZ());
+		var RoleViewScope = role.GetViewScope();
 
 		// 地圖重繪
 		GCCT.fillStyle = "White";
-		GCCT.fillRect(centerX - this.SL*role.GetViewScope(), centerY - this.SL*role.GetViewScope(), this.SL*role.GetViewScope()*2, this.SL*role.GetViewScope()*2);
+		GCCT.fillRect(centerX - this.SL*RoleViewScope, centerY - this.SL*RoleViewScope, this.SL*RoleViewScope*2, this.SL*RoleViewScope*2);
 
 		// Skill1技能格重繪
 		GCCT.beginPath();
 		GCCT.strokeStyle = "Black";
 		GCCT.fillStyle = "Black";
-		GCCT.arc(innerWidth - 3*this.FixedSL/2, innerHeight - this.FixedSL/2, 1.2*this.FixedSL/2, 0, 2*Math.PI);
+		GCCT.arc(this.SkillGrid1X, this.SkillGridY, this.SkillCDLoopRadius, 0, DoublePI);
 		GCCT.stroke();
 		GCCT.fill();
 
@@ -498,80 +521,80 @@ var GameScene = {
 		GCCT.beginPath();
 		GCCT.strokeStyle = "Black";
 		GCCT.fillStyle = "Black";
-		GCCT.arc(innerWidth - this.FixedSL/2, innerHeight - this.FixedSL/2, 1.2*this.FixedSL/2, 0, 2*Math.PI);
+		GCCT.arc(this.SkillGrid2X, this.SkillGridY, this.SkillCDLoopRadius, 0, DoublePI);
 		GCCT.stroke();
 		GCCT.fill();
 
 		// 地圖繪製
-		GCCT.strokeStyle = "Black";
-		GCCT.lineWidth = 1;
-		GCCT.lineCap = "round";
-		GCCT.beginPath();
-		for(var x = -Math.ceil(role.GetViewScope()); x <= Math.round(role.GetViewScope())+1; ++x) {
-			for(var y = -Math.ceil(role.GetViewScope()); y <= Math.round(role.GetViewScope())+1; ++y) {
-				if(Math.floor(role.getY()) + y == -1 && Math.floor(role.getX()) + x >= 0 && Math.floor(role.getX()) + x <= this.maze[Math.round(role.getZ())].length - 1) {
-					GCCT.drawImage(OutOfMazeWall, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+		// GCCT.strokeStyle = "Black";
+		// GCCT.lineWidth = 1;
+		// GCCT.lineCap = "round";
+		// GCCT.beginPath();
+		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
+			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+				if(RoleFloorY + y == -1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1) {
+					GCCT.drawImage(OutOfMazeWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
-				else if(Math.floor(role.getY()) + y == this.maze[Math.round(role.getZ())][Math.floor(role.getX())].length-1 && Math.floor(role.getX()) + x >= 0 && Math.floor(role.getX()) + x <= this.maze[Math.round(role.getZ())].length - 1) {
-					GCCT.drawImage(WallOutOfMaze, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+				else if(RoleFloorY + y == this.maze[RoleIntZ][RoleFloorX].length-1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1) {
+					GCCT.drawImage(WallOutOfMaze, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
-				else if(Math.floor(role.getY()) + y < -1 || Math.floor(role.getY()) + y > this.maze[Math.round(role.getZ())][Math.floor(role.getX())].length-1 || Math.floor(role.getX()) + x < 0 || Math.floor(role.getX()) + x > this.maze[Math.round(role.getZ())].length - 1) {
-					GCCT.drawImage(OutOfMaze, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);			// +1用來填補firefox與ie抗鋸齒所造成的gap
+				else if(RoleFloorY + y < -1 || RoleFloorY + y > this.maze[RoleIntZ][RoleFloorX].length-1 || RoleFloorX + x < 0 || RoleFloorX + x > this.maze[RoleIntZ].length - 1) {
+					GCCT.drawImage(OutOfMaze, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);			// +1用來填補firefox與ie抗鋸齒所造成的gap
 				}
-				else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y].object == "wall") {
-					if(Math.floor(role.getY()) + y + 1 > this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x].length - 1 || this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y + 1].object == "wall") {
-						GCCT.drawImage(MazeWall, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+				else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object == "wall") {
+					if(RoleFloorY + y + 1 > this.maze[RoleIntZ][RoleFloorX + x].length - 1 || this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object == "wall") {
+						GCCT.drawImage(MazeWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
 					else {
-						GCCT.drawImage(MazeFrontWall, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+						GCCT.drawImage(MazeFrontWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
 				}
-				else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y].object == "PassageDown") {
-					if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y - 1].object != "wall") {
-						GCCT.drawImage(MazeWallDownPassageDown, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+				else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object == "PassageDown") {
+					if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y - 1].object != "wall") {
+						GCCT.drawImage(MazeWallDownPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
-					else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x + 1][Math.floor(role.getY()) + y].object != "wall") {
-						GCCT.drawImage(MazeWallLeftPassageDown, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+					else if(this.maze[RoleIntZ][RoleFloorX + x + 1][RoleFloorY + y].object != "wall") {
+						GCCT.drawImage(MazeWallLeftPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
-					else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y + 1].object != "wall") {
-						GCCT.drawImage(MazeWallUpPassageDown, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+					else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object != "wall") {
+						GCCT.drawImage(MazeWallUpPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
-					else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x - 1][Math.floor(role.getY()) + y].object != "wall") {
-						GCCT.drawImage(MazeWallRightPassageDown, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);							
+					else if(this.maze[RoleIntZ][RoleFloorX + x - 1][RoleFloorY + y].object != "wall") {
+						GCCT.drawImage(MazeWallRightPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);							
 					}
 				}
-				else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y].object == "PassageUp" ) {
-					if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y - 1].object != "wall") {
-						GCCT.drawImage(MazeWallDownPassageUp, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+				else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object == "PassageUp" ) {
+					if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y - 1].object != "wall") {
+						GCCT.drawImage(MazeWallDownPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
-					else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x + 1][Math.floor(role.getY()) + y].object != "wall") {
-						GCCT.drawImage(MazeWallLeftPassageUp, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+					else if(this.maze[RoleIntZ][RoleFloorX + x + 1][RoleFloorY + y].object != "wall") {
+						GCCT.drawImage(MazeWallLeftPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
-					else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y + 1].object != "wall") {
-						GCCT.drawImage(MazeWallUpPassageUp, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2  - 2*this.SL/3 + (y-offsetY)*this.SL,  this.SL+1, 5*this.SL/3+1);
+					else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object != "wall") {
+						GCCT.drawImage(MazeWallUpPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY  - 2*this.SL/3 + (y-offsetY)*this.SL,  this.SLPlus, 5*this.SL/3+1);
 					}
-					else if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x - 1][Math.floor(role.getY()) + y].object != "wall") {
-						GCCT.drawImage(MazeWallRightPassageUp, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);							
+					else if(this.maze[RoleIntZ][RoleFloorX + x - 1][RoleFloorY + y].object != "wall") {
+						GCCT.drawImage(MazeWallRightPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);							
 					}
 				}
 				else {
-					if(this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y - 1].object == "wall") {
-						GCCT.drawImage(MazeWallFloor, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+					if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y - 1].object == "wall") {
+						GCCT.drawImage(MazeWallFloor, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
 					else {
-						GCCT.drawImage(MazeFloor, centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+						GCCT.drawImage(MazeFloor, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 					}
 				}
 			}
 		}
-		GCCT.stroke();
+		// GCCT.stroke();
 		// 地圖上物件繪製
 		for(var i = 0; i <= WaitDrawObjects.objects.length-1; ++i) {
 			GCCT.save();
 			WaitDrawObjects.objects[i].update();
 			WaitDrawObjects.objects[i].DrawingSetting();
-			if(Math.round(WaitDrawObjects.objects[i].getZ()) == Math.round(role.getZ()) && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= role.GetViewScope() && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= role.GetViewScope() && WaitDrawObjects.objects[i].GetState() == "visible") {
-				GCCT.drawImage(WaitDrawObjects.objects[i].GetImage(), centerX - this.SL/2 + this.SL*(WaitDrawObjects.objects[i].getX() - role.getX()), centerY - this.SL/2 + this.SL*(WaitDrawObjects.objects[i].getY() - role.getY()), this.SL, this.SL);
+			if(Math.round(WaitDrawObjects.objects[i].getZ()) == RoleIntZ && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= RoleViewScope && WaitDrawObjects.objects[i].GetState() == "visible") {
+				GCCT.drawImage(WaitDrawObjects.objects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects.objects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects.objects[i].getY() - role.getY()), this.SL, this.SL);
 			}
 			GCCT.restore();
 		}
@@ -581,56 +604,59 @@ var GameScene = {
 		if(role.GetState() == "invisible") {
 			GCCT.save();
 			GCCT.globalAlpha = 0.1;
-			GCCT.drawImage(role.GetImage(), centerX - this.SL/2, centerY - this.SL/2, this.SL, this.SL);
+			GCCT.drawImage(role.GetImage(), this.CenterGridLeftTopX, this.CenterGridLeftTopY, this.SL, this.SL);
 			GCCT.restore();
 		}
 
 		// 蓋過地圖上物件的牆繪製
 		GCCT.save();
-		for(var x = -Math.ceil(role.GetViewScope()); x <= Math.round(role.GetViewScope())+1; ++x) {
-			for(var y = -Math.ceil(role.GetViewScope()); y <= Math.round(role.GetViewScope())+1; ++y) {
-				if(Math.floor(role.getY()) + y >= 0 && Math.floor(role.getY()) + y <= this.maze[Math.round(role.getZ())][Math.floor(role.getX())].length - 1 && Math.floor(role.getX()) + x >= 0 && Math.floor(role.getX()) + x <= this.maze[Math.round(role.getZ())].length - 1 && this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y].object != "wall" && this.maze[Math.round(role.getZ())][Math.floor(role.getX()) + x][Math.floor(role.getY()) + y + 1].object == "wall") {
-					GCCT.drawImage(MazeFloorWall,centerX - this.SL/2 + (x-offsetX)*this.SL, centerY - this.SL/2 + (y-offsetY)*this.SL,  this.SL+1, this.SL+1);
+		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
+			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+				if(RoleFloorY + y >= 0 && RoleFloorY + y <= this.maze[RoleIntZ][RoleFloorX].length - 1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1 && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object != "wall" && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object == "wall") {
+					GCCT.drawImage(MazeFloorWall,this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
 			}
 		}
 		GCCT.restore();
 
-		// 視野漸層效果繪製
-		var grd = GCCT.createRadialGradient(centerX, centerY, this.SL/2, centerX, centerY, this.SL*role.GetViewScope());
+		//視野漸層效果繪製
+		// console.log(RoleViewScope);
+		var grd = GCCT.createRadialGradient(centerX, centerY, this.HalfSL, centerX, centerY, this.SL*RoleViewScope);
 		grd.addColorStop(0, "RGBA(0,0,0,0)");
 		grd.addColorStop(1, "RGBA(0,0,0,1)");
 		GCCT.fillStyle = grd;
 		GCCT.beginPath();
-		GCCT.arc(centerX, centerY, this.SL*(role.GetViewScope()), 0, 2*Math.PI);
+		GCCT.arc(centerX, centerY, this.SL*(RoleViewScope), 0, 2*Math.PI);
 		GCCT.stroke();
 		GCCT.fill();
 		GCCT.fillStyle = "Black";
-		GCCT.rect(centerX+this.SL*(role.GetViewScope()+2)+1.5*this.FixedSL,centerY-this.SL*(role.GetViewScope()+2)-1.5*this.FixedSL,-2*(this.SL*(role.GetViewScope()+2)+1.5*this.FixedSL),2*(this.SL*(role.GetViewScope()+2) + 1.5*this.FixedSL));
+		GCCT.rect(centerX+this.SL*(RoleViewScope+2)+1.5*this.FixedSL,centerY-this.SL*(RoleViewScope+2)-1.5*this.FixedSL,-2*(this.SL*(RoleViewScope+2)+1.5*this.FixedSL),2*(this.SL*(RoleViewScope+2) + 1.5*this.FixedSL));
 		GCCT.fill();
 
 		// 上樓動畫繪製
 		if(this.GoUpAnimationRequest == true) {
 			if(this.ViewScope == "unknown") {
-				this.ViewScope = role.GetViewScope();
+				this.ViewScope = RoleViewScope;
 			}
 			GCCT.save();
 			GCCT.beginPath();
 			if(offsetZ <= 0.5) {
 				role.SetViewScope(this.ViewScope + 4*offsetZ);
-				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
+				RoleViewScope = role.GetViewScope();
+				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(RoleViewScope));
 				GCCT.globalAlpha = 2*offsetZ;
 			}
 			else {
 				role.SetViewScope(this.ViewScope - (this.ViewScope-1)*(2-2*offsetZ));
-				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
+				RoleViewScope = role.GetViewScope();
+				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(RoleViewScope));
 				GCCT.globalAlpha = 2-2*offsetZ;
 			}
 			GCCT.strokeStyle = "White";
 			grd.addColorStop(0, "RGBA(255,255,255,1)");
 			grd.addColorStop(1, "RGBA(255,255,255,0.5)");
 			GCCT.fillStyle = grd;
-			GCCT.arc(centerX, centerY, this.SL*(role.GetViewScope()), 0, 2*Math.PI);
+			GCCT.arc(centerX, centerY, this.SL*(RoleViewScope), 0, 2*Math.PI);
 			GCCT.fill();
 			GCCT.restore();
 		}
@@ -638,98 +664,30 @@ var GameScene = {
 		// 下樓動畫繪製
 		if(this.GoDownAnimationRequest == true) {
 			if(this.ViewScope == "unknown") {
-				this.ViewScope = role.GetViewScope();
+				this.ViewScope = RoleViewScope;
 			}
 			GCCT.save();
 			GCCT.beginPath();
 			if(offsetZ >= 0.5) {
 				role.SetViewScope(this.ViewScope - (this.ViewScope-1)*(2-2*offsetZ));
-				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
+				RoleViewScope = role.GetViewScope();
+				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(RoleViewScope));
 				GCCT.globalAlpha = 2-2*offsetZ;
 			}
 			else {
 				role.SetViewScope(this.ViewScope + 4*offsetZ);
-				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
+				RoleViewScope = role.GetViewScope();
+				GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(RoleViewScope));
 				GCCT.globalAlpha = 2*offsetZ;
 			}
 			GCCT.strokeStyle = "White";
 			grd.addColorStop(0, "RGBA(255,255,255,1)");
 			grd.addColorStop(1, "RGBA(255,255,255,0.5)");
 			GCCT.fillStyle = grd;
-			GCCT.arc(centerX, centerY, this.SL*(role.GetViewScope()), 0, 2*Math.PI);
+			GCCT.arc(centerX, centerY, this.SL*(RoleViewScope), 0, 2*Math.PI);
 			GCCT.fill();
 			GCCT.restore();
 		}
-
-
-		// if(this.GoUpAnimationRequest == true) {
-		// 	if(this.times == 0) {
-		// 		this.ViewScope = role.GetViewScope();
-		// 	}
-		// 	GCCT.save();
-		// 	GCCT.beginPath();
-		// 	++this.times;
-		// 	if(this.times <= (this.AnimationTimes/2)) {
-		// 		role.SetViewScope(this.ViewScope + 2*this.times/(this.AnimationTimes/2));
-		// 		GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
-		// 		GCCT.globalAlpha = this.times/(this.AnimationTimes/2);
-		// 	}
-		// 	else {
-		// 		role.SetViewScope(this.ViewScope - (this.ViewScope-1)*(2 - this.times/(this.AnimationTimes/2)));
-		// 		GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
-		// 		GCCT.globalAlpha = 1-(this.times-(this.AnimationTimes/2))/(this.AnimationTimes/2);
-		// 	}
-		// 	GCCT.strokeStyle = "White";
-		// 	grd.addColorStop(0, "RGBA(255,255,255,1)");
-		// 	grd.addColorStop(1, "RGBA(255,255,255,0.5)");
-		// 	GCCT.fillStyle = grd;
-		// 	GCCT.arc(centerX, centerY, this.SL*(role.GetViewScope()), 0, 2*Math.PI);
-		// 	GCCT.fill();
-		// 	if(this.times == (this.AnimationTimes/2)) {
-		// 		role.setZ(Math.round(role.getZ())+1);
-		// 	}
-		// 	else if(this.times == this.AnimationTimes) {
-		// 		this.GoUpAnimationRequest = false;
-		// 		role.SetState("visible");
-		// 		this.times = 0;
-		// 	}
-		// 	GCCT.restore();
-		// }
-
-		// // 下樓動畫繪製
-		// if(this.GoDownAnimationRequest == true) {
-		// 	if(this.times == 0) {
-		// 		this.ViewScope = role.GetViewScope();
-		// 	}
-		// 	GCCT.save();
-		// 	GCCT.beginPath();
-		// 	++this.times;
-		// 	if(this.times <= (this.AnimationTimes/2)) {
-		// 		role.SetViewScope(this.ViewScope - (this.ViewScope-1)*this.times/(this.AnimationTimes/2));
-		// 		GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
-		// 		GCCT.globalAlpha =this.times/(this.AnimationTimes/2);
-		// 	}
-		// 	else {
-		// 		role.SetViewScope(this.ViewScope + 2*(2 - this.times/(this.AnimationTimes/2)));
-		// 		GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(role.GetViewScope()));
-		// 		GCCT.globalAlpha = 1-(this.times-(this.AnimationTimes/2))/(this.AnimationTimes/2);
-		// 	}
-		// 	GCCT.strokeStyle = "White";
-		// 	grd.addColorStop(0, "RGBA(255,255,255,1)");
-		// 	grd.addColorStop(1, "RGBA(255,255,255,0.5)");
-		// 	GCCT.fillStyle = grd;
-		// 	GCCT.arc(centerX, centerY, this.SL*(role.GetViewScope()), 0, 2*Math.PI);
-		// 	GCCT.fill();
-		// 	if(this.times == (this.AnimationTimes/2)) {
-		// 		role.setZ(Math.round(role.getZ())-1);
-		// 	}
-		// 	else if(this.times == this.AnimationTimes) {
-		// 		this.GoDownAnimationRequest = false;
-		// 		role.SetState("visible");
-		// 		this.times = 0;
-		// 	}
-		// 	GCCT.restore();
-		// }
 
 		// Skill1技能格繪製
 		GCCT.beginPath();
@@ -754,7 +712,7 @@ var GameScene = {
 		// 玩家擁有物品繪製
 		for(var i = -2; i <= 5; ++i) {
 			if(role.GetItem(i+2) != "NoItem") {
-				GCCT.drawImage(role.GetItem(i+2).GetImage(), centerX - this.SL/2 + this.SL*(role.GetViewScope()+0.5)*Math.cos(2*Math.PI/8*(i)),centerY - this.SL/2 + this.SL*(role.GetViewScope()+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
+				GCCT.drawImage(role.GetItem(i+2).GetImage(), this.CenterGridLeftTopX + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)),this.CenterGridLeftTopY + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
 			}
 		}
 
@@ -767,7 +725,7 @@ var GameScene = {
 			else {
 				GCCT.globalAlpha = 0.2;
 			}
-			GCCT.drawImage(ItemBorder, centerX - this.FixedSL/2 + (this.SL*(role.GetViewScope()) + this.FixedSL/3)*Math.cos(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),centerY - this.FixedSL/2 + (this.SL*(role.GetViewScope()) + this.FixedSL/3 )*Math.sin(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),this.FixedSL,this.FixedSL);
+			GCCT.drawImage(ItemBorder, centerX - this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3)*Math.cos(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),centerY - this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3 )*Math.sin(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),this.FixedSL,this.FixedSL);
 		}
 		GCCT.restore();
 

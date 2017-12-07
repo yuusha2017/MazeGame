@@ -4,6 +4,7 @@ var centerX = GC.width/2;
 var centerY = GC.height/2;
 var RefreshFrequency = 60;
 var BorderTolerance = 0.2;      		// 需>=最高移動速度/60
+var DoublePI = 2*Math.PI;
 var offset = 0.001;
 var AngleOffset = 0;
 var MazeWall = new Image();
@@ -265,7 +266,7 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 
 // 角色" "結構
 function Sheep(argX, argY, argZ) {
-	Role.call(this, argX, argY, argZ, sheep, "Sheep", 2, 3, 1000, 60, "TreasureHunter", flash, flash);
+	Role.call(this, argX, argY, argZ, sheep, "Sheep", 4, 4, 1000, 60, "TreasureHunter", flash, flash);
 	this.Skill1 = function() {
 		return;
 	};
@@ -293,7 +294,7 @@ function Sheep(argX, argY, argZ) {
 
 // 角色" "結構
 function Wolf(argX, argY, argZ) {
-	Role.call(this, argX, argY, argZ, wolf, "Wolf", 2, 4, 1200, 1200, "TreasureDefender", flash, flash);
+	Role.call(this, argX, argY, argZ, wolf, "Wolf", 3, 4, 1200, 1200, "TreasureDefender", flash, flash);
 	var HideTime = 0;
 	var SpeedTime = 0;
 	var OnHide = false;
