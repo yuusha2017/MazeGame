@@ -293,7 +293,7 @@ function Sheep(argX, argY, argZ) {
 
 // 角色" "結構
 function Wolf(argX, argY, argZ) {
-	Role.call(this, argX, argY, argZ, wolf, "Wolf", 2, 4, 1200, 1200, "TreasureDefender", flash, flash);
+	Role.call(this, argX, argY, argZ, wolf, "Wolf", 4, 4, 1200, 1200, "TreasureDefender", flash, flash);
 	var HideTime = 0;
 	var SpeedTime = 0;
 	var OnHide = false;

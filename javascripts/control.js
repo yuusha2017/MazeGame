@@ -165,43 +165,26 @@ var Control = {
     LoadGameScene : function() {
         this.state = "GameScene";
         this.transition();			// temp
-        this.RoleList = [new Wolf(0,0,0)
-                                  /*, new Wolf(0,0,0)*/];
+        this.RoleList = [new Wolf(0,0,0),
+                         new Wolf(0,0,0)];
         this.PlayerList = [new Player("Player1", this.RoleList[0])];
-        // this.AIList = [new Vega("Vega1", this.RoleList[1])];
+        this.AIList = [new Vega("Vega1", this.RoleList[1])];
         this.RoleList[0].SetOperator(this.PlayerList[0]);
-        // this.RoleList[1].SetOperator(this.AIList[0]);
+        this.RoleList[1].SetOperator(this.AIList[0]);
         WaitDrawObjects.objects.push(new Exit(0,0,0));
         WaitDrawObjects.objects.push(new Treasure(0,0,0));
         WaitDrawObjects.objects.push(this.RoleList[0]);
-        // WaitDrawObjects.objects.push(this.RoleList[1]);
+        WaitDrawObjects.objects.push(this.RoleList[1]);
         for(var AINumber = 0; AINumber <= this.AIList.length-1; ++AINumber) {
             this.AIMaze.push(MazeCopier(GameScene.maze));
         }
-       // console.log("start");
-        //console.log(GameScene.maze);
-        //console.log(this.AIMaze[0]);
-        //console.log(this.AIMaze[0]);
-        //console.log("passed = true");    
-        //this.AIMaze[0][0][0].passed = true;  // 順序奇怪
-        //console.log("passed = end");
         //GameScene.render();
         for(var AINumber = 0; AINumber <= this.AIList.length - 1; ++AINumber) {
-            this.AIList[AINumber].Information_Initialization(this.RoleList.length-1);
+            this.AIList[AINumber].Info_Init(this.RoleList.length-1);
         }
-        ObjectPositionInitialization(GameScene.maze, this.RoleList);
+        ObjectPositionInit(GameScene.maze, this.RoleList);
         GameScene.SetFixedSL((window.innerHeight*window.devicePixelRatio)/2/5);
         GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(this.RoleList[0].GetViewScope()));
-        // WaitDrawObjects.objects.push(new SpeedShoes(1,1));
-        // this.ItemList.push(WaitDrawObjects.objects[WaitDrawObjects.objects.length-1]);
-        // WaitDrawObjects.objects.push(new SpeedShoes(1,2));
-        // this.ItemList.push(WaitDrawObjects.objects[WaitDrawObjects.objects.length-1]);
-        // WaitDrawObjects.objects.push(new SpeedShoes(1,3));
-        // this.ItemList.push(WaitDrawObjects.objects[WaitDrawObjects.objects.length-1]);
-        // WaitDrawObjects.objects.push(new SpeedShoes(1,4));
-        // this.ItemList.push(WaitDrawObjects.objects[WaitDrawObjects.objects.length-1]);
-        // WaitDrawObjects.objects.push(new SpeedShoes(1,5));
-        // this.ItemList.push(WaitDrawObjects.objects[WaitDrawObjects.objects.length-1]);
         this.StartGame();
     },
 
@@ -227,16 +210,7 @@ var Control = {
         this.audio.setAttribute("src","heartbeat-01a.mp3");
         this.audio.setAttribute("autoplay", "autoplay");
         this.audio.setAttribute("loop", "loop");
-        // this.audio.muted = true;
         document.body.appendChild(this.audio);
-        // console.log(GameScene.maze);
-    },
-
-    TransInformation : function() {
-        for(var AINumber = 0; AINumber <= this.AIList.length-1; ++AINumber) {
-            this.AIList[AINumber].CollectInformation(GetAIAvailableInformation(this.AIList[AINumber].GetRole(), this.RoleList, this.AIMaze[AINumber]));
-            this.AIList[AINumber].ActionThinking();
-        }
     },
     
     KeyDownEventHandler : function(e) {
@@ -324,7 +298,10 @@ var Control = {
         for(var AINumber = 0; AINumber <= this.AIList.length-1; ++AINumber) {
             this.AIList[AINumber].StrategyThinking();
          }
-         this.TransInformation();
+        for(var AINumber = 0; AINumber <= this.AIList.length-1; ++AINumber) {
+            this.AIList[AINumber].CollectInfo(GetAIAvailableInfo(this.AIList[AINumber].GetRole(), this.RoleList, this.AIMaze[AINumber]));
+            this.AIList[AINumber].ActionThinking();
+        }
         for(var RoleNumber = 0; RoleNumber <= this.RoleList.length-1; ++RoleNumber) {
             for(var ItemNumber = 0; ItemNumber <= 7; ++ItemNumber) {
                 if(this.RoleList[RoleNumber].GetItem(ItemNumber) != "NoItem") {
@@ -332,39 +309,24 @@ var Control = {
                 }
             }
 
-            // 目前不支援斜角移動
-            /*
-            if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & (KeyLeft + KeyUp)) == (KeyLeft + KeyUp)) {
-                MoveLeftUp(this.RoleList[RoleNumber]);
-            }
-            else if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & (KeyUp + KeyRight)) == (KeyUp + KeyRight)) {
-                MoveRightUp(this.RoleList[RoleNumber]);
-            }
-            else if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & (KeyRight + KeyDown)) == (KeyRight + KeyDown)) {
-                MoveRightDown(this.RoleList[RoleNumber]);
-            }
-            else if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & (KeyDown + KeyLeft)) == (KeyDown + KeyLeft)) {
-                MoveLeftDown(this.RoleList[RoleNumber]);
-            }
-            */
             if(Math.round(this.RoleList[RoleNumber].getZ()) == this.RoleList[RoleNumber].getZ()) {
                 if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyLeft) == KeyLeft) {
-                    this.RoleList[RoleNumber].GetOperator().GetKeyboardSetting().KeyLeft(this.RoleList[RoleNumber]);
+                    this.RoleList[RoleNumber].MoveLeft();
                 }
                 else if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyUp) == KeyUp) {
-                    this.RoleList[RoleNumber].GetOperator().GetKeyboardSetting().KeyUp(this.RoleList[RoleNumber]);
+                    this.RoleList[RoleNumber].MoveUp();
                 }
                 else if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyRight) == KeyRight) {
-                    this.RoleList[RoleNumber].GetOperator().GetKeyboardSetting().KeyRight(this.RoleList[RoleNumber]);
+                    this.RoleList[RoleNumber].MoveRight();
                 }
                 else if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyDown) == KeyDown) {
-                    this.RoleList[RoleNumber].GetOperator().GetKeyboardSetting().KeyDown(this.RoleList[RoleNumber]);
+                    this.RoleList[RoleNumber].MoveDown();
                 }
                 if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyD) == KeyD) {
-                    this.RoleList[RoleNumber].GetOperator().GetKeyboardSetting().KeyD(this.RoleList[RoleNumber]);
+                    this.RoleList[RoleNumber].Skill1();
                 }
                 if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyF) == KeyF) {
-                    this.RoleList[RoleNumber].GetOperator().GetKeyboardSetting().KeyF(this.RoleList[RoleNumber]);
+                    this.RoleList[RoleNumber].Skill2();
                 }
             }
             if((this.RoleList[RoleNumber].GetOperator().GetKeyboardState() & KeyQ) == KeyQ) {
@@ -391,7 +353,6 @@ var Control = {
 
             // 上樓下樓
             if(Math.round(this.RoleList[RoleNumber].getX()) == this.RoleList[RoleNumber].getX() && Math.round(this.RoleList[RoleNumber].getY()) == this.RoleList[RoleNumber].getY() && (this.RoleList[RoleNumber].GetPreX() != this.RoleList[RoleNumber].getX() || this.RoleList[RoleNumber].GetPreY() != this.RoleList[RoleNumber].getY()) && GameScene.maze[Math.round(this.RoleList[RoleNumber].getZ())][this.RoleList[RoleNumber].getX()][this.RoleList[RoleNumber].getY()].object == "PassageUp" || this.RoleList[RoleNumber].GetState() == "GoUp") {
-                console.log(Math.round(this.RoleList[RoleNumber].getZ()));
                 this.RoleList[RoleNumber].SetPrePosition(this.RoleList[RoleNumber].getX(),this.RoleList[RoleNumber].getY(), this.RoleList[RoleNumber].getZ());
                 this.RoleList[RoleNumber].SetState("GoUp");
                 this.RoleList[RoleNumber].setZ(this.RoleList[RoleNumber].getZ() + 1/60);
@@ -407,7 +368,6 @@ var Control = {
                 }
             }
             else if(Math.round(this.RoleList[RoleNumber].getX()) == this.RoleList[RoleNumber].getX() && Math.round(this.RoleList[RoleNumber].getY()) == this.RoleList[RoleNumber].getY() && (this.RoleList[RoleNumber].GetPreX() != this.RoleList[RoleNumber].getX() || this.RoleList[RoleNumber].GetPreY() != this.RoleList[RoleNumber].getY()) && GameScene.maze[Math.round(this.RoleList[RoleNumber].getZ())][this.RoleList[RoleNumber].getX()][this.RoleList[RoleNumber].getY()].object == "PassageDown" || this.RoleList[RoleNumber].GetState() == "GoDown") {
-                console.log(Math.round(this.RoleList[RoleNumber].getZ()));
                 this.RoleList[RoleNumber].SetPrePosition(this.RoleList[RoleNumber].getX(), this.RoleList[RoleNumber].getY(), this.RoleList[RoleNumber].getZ());
                 this.RoleList[RoleNumber].SetState("GoDown");
                 this.RoleList[RoleNumber].setZ(this.RoleList[RoleNumber].getZ() - 1/60);
@@ -457,12 +417,8 @@ var Control = {
             }
         }
         if(ShortestDistance <= 10) {
-            // this.audio.muted = false;
             this.audio.playbackRate = 3 - ShortestDistance/5;
         }
-        // else {
-        //     this.audio.muted = true;
-        // }
 
 
         if(this.GameOver == true) {
@@ -470,12 +426,10 @@ var Control = {
         }
         else {
             // console.time('GameScene.UpdateViewScope');
-            GameScene.UpdateViewScope(this.RoleList[0]);
+            GameScene.UpdateViewScope(this.RoleList[1]);
             // console.timeEnd('GameScene.UpdateViewScope');
-            //  console.time('requestAnimationFrame');
             this.LastTimeStamp = timestamp;
             requestAnimationFrame(this.UpdateGameProgress.bind(this));
-            // console.timeEnd('requestAnimationFrame');
         }
     },		
 
