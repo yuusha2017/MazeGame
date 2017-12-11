@@ -192,6 +192,7 @@ var OptionScene = {
 			this.UnSelect();
 			this.selection = (this.selection == 0) ? (this.MenuItems.length - 1) : (this.selection - 1);
 			this.OnSelect();
+			return;
 		}
 		else if(this.selection == 0) {
 			this.MazeLength = ((this.MazeLength + 1) > this.MaxMazeLength) ? this.MaxMazeLength : (this.MazeLength + 1);
@@ -232,6 +233,7 @@ var OptionScene = {
 			this.UnSelect();
 			this.selection = (this.selection == this.MenuItems.length-1) ? 0 : (this.selection + 1);
 			this.OnSelect();
+			return;
 		}
 		else if(this.selection == 0) {
 			this.MazeLength = ((this.MazeLength - 1) < this.MinMazeLength) ? this.MinMazeLength : (this.MazeLength - 1);
