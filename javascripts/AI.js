@@ -62,6 +62,7 @@ function Vega(name, role) {
         return "AllKeyUp";
     };
     this.CollectInfo = function(Info) {
+        // console.log(Info.Maze);
         this.RolePreRelativeX = this.RoleRelativeX;
         this.RolePreRelativeY = this.RoleRelativeY;
         this.RolePreRelativeZ = this.RoleRelativeZ;
@@ -75,56 +76,82 @@ function Vega(name, role) {
         this.RoleZ = this.RoleInitialZ + Math.round(this.RoleRelativeZ);
 
         // 更新玩家資訊記憶
-        for(var PlayerNumber = 0; PlayerNumber <= Info.OtherPlayers.length-1; ++PlayerNumber) {
-            this.Memory_OtherPlayers[PlayerNumber].Name = Info.OtherPlayers[PlayerNumber].Name;
-            if(Info.OtherPlayers[PlayerNumber].RelativeX != "unknown" && Info.OtherPlayers[PlayerNumber].RelativeY != "unknown") {
-                this.Memory_OtherPlayers[PlayerNumber].RelativeX = Info.OtherPlayers[PlayerNumber].RelativeX + this.RoleRelativeX;
-                this.Memory_OtherPlayers[PlayerNumber].RelativeY = Info.OtherPlayers[PlayerNumber].RelativeY + this.RoleRelativeY;
+        for(PlayerNum = 0; PlayerNum < Info.OtherPlayers.length; ++PlayerNum) {
+            this.Memory_OtherPlayers[PlayerNum].Name = Info.OtherPlayers[PlayerNum].Name;
+            if(Info.OtherPlayers[PlayerNum].RelativeX != "unknown" && Info.OtherPlayers[PlayerNum].RelativeY != "unknown") {
+                this.Memory_OtherPlayers[PlayerNum].RelativeX = Info.OtherPlayers[PlayerNum].RelativeX + this.RoleRelativeX;
+                this.Memory_OtherPlayers[PlayerNum].RelativeY = Info.OtherPlayers[PlayerNum].RelativeY + this.RoleRelativeY;
             }
             else {
-                this.Memory_OtherPlayers[PlayerNumber].RelativeX = "unknown";
-                this.Memory_OtherPlayers[PlayerNumber].RelativeY = "unknown";
+                this.Memory_OtherPlayers[PlayerNum].RelativeX = "unknown";
+                this.Memory_OtherPlayers[PlayerNum].RelativeY = "unknown";
             }
         }
 
         // 擴充迷宮記憶空間
+        while(this.RoleZ <= 0) {	
+            this.Memory_Maze.unshift([]);	
+            ++this.RoleInitialZ;
+            ++this.RoleZ;								
+            for(x = 0; x < this.Memory_Maze[1].length; ++x) {
+                this.Memory_Maze[0].push([]);
+                for(y = 0; y < this.Memory_Maze[1][x].length; ++y) {
+                     this.Memory_Maze[0][x].push("unknown");
+                }
+            }
+        }
+        while(this.RoleZ >= this.Memory_Maze.length-1) {
+            this.Memory_Maze.push([]);									
+            for(x = 0; x < this.Memory_Maze[this.Memory_Maze.length-2].length; ++x) {
+                this.Memory_Maze[this.Memory_Maze.length-1].push([]);
+                for(y = 0; y < this.Memory_Maze[this.Memory_Maze.length-2][x].length; ++y) {
+                    this.Memory_Maze[this.Memory_Maze.length-1][x].push("unknown");
+                }
+            }
+        }
         while(this.RoleX - Info.MazeInfoCenterX < 1) {
-            this.Memory_Maze[this.RoleZ].unshift([]);
             ++this.RoleInitialX;
             ++this.RoleX;
-            for(var y = 0; y < this.Memory_Maze[this.RoleZ][1].length; ++y) {
-                this.Memory_Maze[this.RoleZ][0].push("unknown");
+            for(z = 0; z < this.Memory_Maze.length; ++z) {
+                this.Memory_Maze[z].unshift([]);
+                for(y = 0; y < this.Memory_Maze[z][1].length; ++y) {
+                    this.Memory_Maze[z][0].push("unknown");
+                }
             }
         }
         while(this.RoleY - Info.MazeInfoCenterY < 1) {
-            for(var x = 0; x < this.Memory_Maze[this.RoleZ].length; ++x) {
-                this.Memory_Maze[this.RoleZ][x].unshift("unknown");
+            for(z = 0; z < this.Memory_Maze.length; ++z) {
+                for(x = 0; x < this.Memory_Maze[z].length; ++x) {
+                    this.Memory_Maze[z][x].unshift("unknown");
+                }
             }
             ++this.RoleInitialY;
             ++this.RoleY;
         }
         while(this.RoleX + (Info.Maze.length - 1 - Info.MazeInfoCenterX) >= this.Memory_Maze[this.RoleZ].length-1) {
-            this.Memory_Maze[this.RoleZ].push([]);
-            for(var y = 0; y < this.Memory_Maze[this.RoleZ][this.Memory_Maze[this.RoleZ].length - 2].length; ++y) {
-                this.Memory_Maze[this.RoleZ][this.Memory_Maze[this.RoleZ].length - 1].push("unknown");
+            for(z = 0; z < this.Memory_Maze.length; ++z) {
+                this.Memory_Maze[z].push([]);
+                for(y = 0; y < this.Memory_Maze[z][this.Memory_Maze[z].length - 2].length; ++y) {
+                    this.Memory_Maze[z][this.Memory_Maze[z].length - 1].push("unknown");
+                }
             }
         }
         while(this.RoleY + (Info.Maze[Info.MazeInfoCenterX].length - 1 - Info.MazeInfoCenterY) >= this.Memory_Maze[this.RoleZ][this.RoleX].length-1) {
-            for(var x = 0; x < this.Memory_Maze[this.RoleZ].length; ++x) {
-                this.Memory_Maze[this.RoleZ][x].push("unknown");
+            for(z = 0; z < this.Memory_Maze.length; ++z) {
+                for(x = 0; x < this.Memory_Maze[z].length; ++x) {
+                    this.Memory_Maze[z][x].push("unknown");
+                }
             }
         }
 
         // 更新迷宮記憶
-        for(var x = 0; x < Info.Maze.length; ++x) {
-            for(var y = 0; y < Info.Maze[x].length; ++y) {
+        for(x = 0; x < Info.Maze.length; ++x) {
+            for(y = 0; y < Info.Maze[x].length; ++y) {
                 if(Info.Maze[x][y] != "unknown") {
                     this.Memory_Maze[this.RoleZ][this.RoleX+x-Info.MazeInfoCenterX][this.RoleY+y-Info.MazeInfoCenterY] = Info.Maze[x][y];
                 }
             }
         }
-        // console.log(Info.Maze);
-        // console.log(this.Memory_Maze);
 
         if(this.Memory_OtherPlayers[0].RelativeX != "unknown" && this.Memory_OtherPlayers[0].RelativeY != "unknown")  {
             this.ObjectPositionX = this.RoleInitialX + Math.round(this.Memory_OtherPlayers[0].RelativeX);
@@ -153,16 +180,16 @@ function Vega(name, role) {
     };
 
     this.Info_Init = function(RoleNumber) {	
-        for(var z = 0; z <= 2; ++z) {	
+        for(z = 0; z <= 2; ++z) {	
             this.Memory_Maze.push([]);									
-            for(var x = 0; x <= 24; ++x) {
+            for(x = 0; x <= 24; ++x) {
                 this.Memory_Maze[z].push([]);
-                for(var y = 0; y <= 24; ++y) {
+                for(y = 0; y <= 24; ++y) {
                     this.Memory_Maze[z][x].push("unknown");
                 }
             }
         }
-        for(var RoleNum = 0; RoleNum <= RoleNumber-1; ++RoleNum) {
+        for(RoleNum = 0; RoleNum < RoleNumber; ++RoleNum) {
             this.Memory_OtherPlayers.push({Name : "unknown", RelativeX : "unknown", RelativeY : "unknown"});
         }
         this.RoleInitialX = Math.floor(this.Memory_Maze[0].length/2);
@@ -177,18 +204,40 @@ function Vega(name, role) {
         this.RoleZ = this.RoleInitialZ;
     };
 
-    this.ImaginaryGo = function(x,y,LastMove) {
-        this.Memory_Maze[this.RoleZ][x][y].passed = true;
-        var ValueUp = 0.01 - 0.1*this.Memory_Maze[this.RoleZ][x][y].passtimes;
-        var ValueRight = 0.01 - 0.1*this.Memory_Maze[this.RoleZ][x][y].passtimes;
-        var ValueDown = 0.01 - 0.1*this.Memory_Maze[this.RoleZ][x][y].passtimes;
-        var ValueLeft = 0.01 - 0.1*this.Memory_Maze[this.RoleZ][x][y].passtimes;
+    this.ImaginaryGo = function(x,y,z,LastMove) {
+        this.Memory_Maze[z][x][y].passed = true;
+        if(this.Memory_Maze[z][x][y].object == "PassageUp" && LastMove != "GoDown") {
+            var ValueGoUp = 0;
+            if(this.Memory_Maze[z+1][x][y] == "unknown") {
+                ValueGoUp += 20;
+            }
+            else {
+                ValueGoUp += this.ImaginaryGo(x,y,z+1,"GoUp");
+            }
+            this.Memory_Maze[z][x][y].passed = false;
+            return ValueGoUp;
+        }
+        if(this.Memory_Maze[z][x][y].object == "PassageDown" && LastMove != "GoUp") {
+            var ValueGoDown = 0;
+            if(this.Memory_Maze[z-1][x][y] == "unknown") {
+                ValueGoDown += 20;
+            }
+            else {
+                ValueGoDown += this.ImaginaryGo(x,y,z-1,"GoDown");
+            }
+            this.Memory_Maze[z][x][y].passed = false;
+            return ValueGoDown;
+        }
+        var ValueUp = 0.01 - 0.1*this.Memory_Maze[z][x][y].passtimes;
+        var ValueRight = 0.01 - 0.1*this.Memory_Maze[z][x][y].passtimes;
+        var ValueDown = 0.01 - 0.1*this.Memory_Maze[z][x][y].passtimes;
+        var ValueLeft = 0.01 - 0.1*this.Memory_Maze[z][x][y].passtimes;
 
         // 累加ValueUp
         if(LastMove != "down") {
-            if(this.Memory_Maze[this.RoleZ][x][y-1] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x][y-1].object == "road" && this.Memory_Maze[this.RoleZ][x][y-1].passed == false) {
-                    ValueUp += this.ImaginaryGo(x, y-1, "up");	
+            if(this.Memory_Maze[z][x][y-1] != "unknown") {
+                if(this.Memory_Maze[z][x][y-1].object != "wall" && this.Memory_Maze[z][x][y-1].passed == false) {
+                    ValueUp += this.ImaginaryGo(x, y-1, z, "up");	
                 }
             } 
             else {
@@ -197,10 +246,10 @@ function Vega(name, role) {
         }
 
         // 累加ValueRight
-        if(LastMove == "left") {
-            if(this.Memory_Maze[this.RoleZ][x+1][y] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x+1][y].object == "road" && this.Memory_Maze[this.RoleZ][x+1][y].passed == false) {
-                    ValueRight += this.ImaginaryGo(x+1, y, "right");	
+        if(LastMove != "left") {
+            if(this.Memory_Maze[z][x+1][y] != "unknown") {
+                if(this.Memory_Maze[z][x+1][y].object != "wall" && this.Memory_Maze[z][x+1][y].passed == false) {
+                    ValueRight += this.ImaginaryGo(x+1, y, z, "right");	
                 }
             } 
             else {
@@ -209,10 +258,10 @@ function Vega(name, role) {
         }
 
         // 累加ValueDown
-        if(LastMove == "up") {
-            if(this.Memory_Maze[this.RoleZ][x][y+1] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x][y+1].object == "road" && this.Memory_Maze[this.RoleZ][x][y+1].passed == false) {
-                    ValueDown += this.ImaginaryGo(x, y+1, "down");	
+        if(LastMove != "up") {
+            if(this.Memory_Maze[z][x][y+1] != "unknown") {
+                if(this.Memory_Maze[z][x][y+1].object != "wall" && this.Memory_Maze[z][x][y+1].passed == false) {
+                    ValueDown += this.ImaginaryGo(x, y+1, z, "down");	
                 }
             } 
             else {
@@ -221,10 +270,10 @@ function Vega(name, role) {
         }
 
         // 累加ValueLeft
-        if(LastMove == "right") {
-            if(this.Memory_Maze[this.RoleZ][x-1][y] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x-1][y].object == "road" && this.Memory_Maze[this.RoleZ][x-1][y].passed == false) {
-                    ValueLeft += this.ImaginaryGo(x-1, y, "left");	
+        if(LastMove != "right") {
+            if(this.Memory_Maze[z][x-1][y] != "unknown") {
+                if(this.Memory_Maze[z][x-1][y].object != "wall" && this.Memory_Maze[z][x-1][y].passed == false) {
+                    ValueLeft += this.ImaginaryGo(x-1, y, z, "left");	
                 }
             } 
             else {
@@ -232,17 +281,36 @@ function Vega(name, role) {
             }
         }
 
-        this.Memory_Maze[this.RoleZ][x][y].passed = false;
+        this.Memory_Maze[z][x][y].passed = false;
         return Math.max(ValueUp, ValueRight, ValueDown, ValueLeft);
     };
-    this.GoObjectPositionDistance = function(x, y, LastMove) {
-        // console.log(this.ObjectPositionX);
-        // console.log(this.ObjectPositionY);
-        this.Memory_Maze[this.RoleZ][x][y].passed = true;
+    this.GoObjectPositionDistance = function(x,y,z,LastMove) {
+        this.Memory_Maze[z][x][y].passed = true;
         if(x == this.ObjectPositionX && y == this.ObjectPositionY) {
-            this.Memory_Maze[this.RoleZ][x][y].passed = false;
-            // console.log("Hello!");
+            this.Memory_Maze[z][x][y].passed = false;
             return 1;
+        }
+        if(this.Memory_Maze[z][x][y].object == "PassageUp" && LastMove != "GoDown") {
+            var DistanceGoUp = 0;
+            if(this.Memory_Maze[z+1][x][y] == "unknown") {
+                DistanceGoUp += Infinity;
+            }
+            else {
+                DistanceGoUp += this.GoObjectPositionDistance(x,y,z+1,"GoDown");
+            }
+            this.Memory_Maze[z][x][y].passed = false;
+            return DistanceGoUp;
+        }
+        if(this.Memory_Maze[z][x][y].object == "PassageDown" && LastMove != "GoUp") {
+            var DistanceGoDown = 0;
+            if(this.Memory_Maze[z-1][x][y] == "unknown") {
+                DistanceGoDown += Infinity;
+            }
+            else {
+                DistanceGoDown += this.GoObjectPositionDistance(x,y,z-1,"GoDown");
+            }
+            this.Memory_Maze[z][x][y].passed = false;
+            return DistanceGoDown;
         }
         var DistanceUp = 1;
         var DistanceRight = 1;
@@ -251,10 +319,9 @@ function Vega(name, role) {
 
         // 累加DistanceUp
         if(LastMove != "down") {
-            if(this.Memory_Maze[this.RoleZ][x][y-1] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x][y-1].object == "road" && this.Memory_Maze[this.RoleZ][x][y-1].passed == false) {
-                    // console.log(1);
-                    DistanceUp += this.GoObjectPositionDistance(x, y-1, "up");	
+            if(this.Memory_Maze[z][x][y-1] != "unknown") {
+                if(this.Memory_Maze[z][x][y-1].object != "wall" && this.Memory_Maze[z][x][y-1].passed == false) {
+                    DistanceUp += this.GoObjectPositionDistance(x, y-1, z, "up");	
                 }
                 else {
                     DistanceUp = Infinity;
@@ -270,10 +337,9 @@ function Vega(name, role) {
 
         // 累加DistanceRight
         if(LastMove != "left") {
-            if(this.Memory_Maze[this.RoleZ][x+1][y] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x+1][y].object == "road" && this.Memory_Maze[this.RoleZ][x+1][y].passed == false) {
-                    // console.log(2);
-                    DistanceRight += this.GoObjectPositionDistance(x+1, y, "right");	
+            if(this.Memory_Maze[z][x+1][y] != "unknown") {
+                if(this.Memory_Maze[z][x+1][y].object != "wall" && this.Memory_Maze[z][x+1][y].passed == false) {
+                    DistanceRight += this.GoObjectPositionDistance(x+1, y, z, "right");	
                 }
                 else {
                     DistanceRight = Infinity;
@@ -289,10 +355,9 @@ function Vega(name, role) {
 
         // 累加DistanceDown
         if(LastMove != "up") {
-            if(this.Memory_Maze[this.RoleZ][x][y+1] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x][y+1].object == "road" && this.Memory_Maze[this.RoleZ][x][y+1].passed == false) {
-                    // console.log(3);
-                    DistanceDown += this.GoObjectPositionDistance(x, y+1, "down");	
+            if(this.Memory_Maze[z][x][y+1] != "unknown") {
+                if(this.Memory_Maze[z][x][y+1].object != "wall" && this.Memory_Maze[z][x][y+1].passed == false) {
+                    DistanceDown += this.GoObjectPositionDistance(x, y+1, z, "down");	
                 }
                 else {
                     DistanceDown = Infinity;
@@ -308,10 +373,9 @@ function Vega(name, role) {
 
         // 累加DistanceLeft
         if(LastMove != "right") {
-            if(this.Memory_Maze[this.RoleZ][x-1][y] != "unknown") {
-                if(this.Memory_Maze[this.RoleZ][x-1][y].object == "road" && this.Memory_Maze[this.RoleZ][x-1][y].passed == false) {
-                    // console.log(4);
-                    DistanceLeft += this.GoObjectPositionDistance(x-1, y, "left");	
+            if(this.Memory_Maze[z][x-1][y] != "unknown") {
+                if(this.Memory_Maze[z][x-1][y].object != "wall" && this.Memory_Maze[z][x-1][y].passed == false) {
+                    DistanceLeft += this.GoObjectPositionDistance(x-1, y, z, "left");	
                 }
                 else {
                     DistanceLeft = Infinity;
@@ -325,8 +389,7 @@ function Vega(name, role) {
             DistanceLeft = Infinity;
         }
 
-        this.Memory_Maze[this.RoleZ][x][y].passed = false;
-        // console.log(Math.min(DistanceUp, DistanceRight, DistanceDown, DistanceLeft));
+        this.Memory_Maze[z][x][y].passed = false;
         return Math.min(DistanceUp, DistanceRight, DistanceDown, DistanceLeft);
     };
 
@@ -344,15 +407,8 @@ function Vega(name, role) {
                 break;
             }
             case "ChasePlayer" : {
-                // if(this.ObjectPositionX != "unknown" && this.ObjectPositionY != "unknown"  ) {
-                //     // console.log(this.Memory_Maze[this.RoleZ][this.ObjectPositionX][this.ObjectPositionY]);
-                //     console.log(this.ObjectPositionX - this.RoleX);
-                //     console.log(this.ObjectPositionY - this.RoleY);
-                // }
                 if(this.ObjectPositionX != "unknown" && this.ObjectPositionY != "unknown" && 
-                    this.GoObjectPositionDistance(this.RoleX, this.RoleY, "NoLastMove") != Infinity) {
-
-                        console.log(this.GoObjectPositionDistance(this.RoleX, this.RoleY, "NoLastMove"));
+                    this.GoObjectPositionDistance(this.RoleX, this.RoleY, this.RoleZ, "NoLastMove") != Infinity) {
                     ActionValue += 10;
                 }
                 break;
@@ -366,8 +422,7 @@ function Vega(name, role) {
                         if(this.Memory_Maze[this.RoleZ][this.RoleInitialX + Math.floor(this.RoleRelativeX-5*offset)][this.RoleY].passtimes == 0) {
                             ++ActionValue;
                         }
-                        // this.times = 0;
-                        ActionValue += this.ImaginaryGo(this.RoleInitialX + Math.floor(this.RoleRelativeX-5*offset), this.RoleY, "left");
+                        ActionValue += this.ImaginaryGo(this.RoleInitialX + Math.floor(this.RoleRelativeX-5*offset), this.RoleY, this.RoleZ, "left");
                         break;
                     }
                     case "SearchMaze" : {
@@ -375,7 +430,7 @@ function Vega(name, role) {
                         break;
                     }
                     case "ChasePlayer" : {
-                        ActionValue = -this.GoObjectPositionDistance(this.RoleInitialX + Math.floor(this.RoleRelativeX - offset), this.RoleY, "left");
+                        ActionValue = -this.GoObjectPositionDistance(this.RoleInitialX + Math.floor(this.RoleRelativeX - offset), this.RoleY, this.RoleZ, "left");
                         break;
                     }
                     default : {
@@ -391,17 +446,16 @@ function Vega(name, role) {
                             ActionValue -= 5;
                         }
                         if(this.Memory_Maze[this.RoleZ][this.RoleX][this.RoleInitialY + Math.floor(this.RoleRelativeY - 5*offset)].passtimes == 0) {
-                            ++ActionValue;
+                            ActionValue += 5;
                         }
-                        // this.times = 0;
-                        ActionValue += this.ImaginaryGo(this.RoleX, this.RoleInitialY + Math.floor(this.RoleRelativeY - 5*offset), "up");
+                        ActionValue += this.ImaginaryGo(this.RoleX, this.RoleInitialY + Math.floor(this.RoleRelativeY - 5*offset), this.RoleZ, "up");
                         break;
                     }
                     case "SearchMaze" : {
                         break;
                     }
                     case "ChasePlayer" : {
-                        ActionValue = -this.GoObjectPositionDistance(this.RoleX, this.RoleInitialY + Math.floor(this.RoleRelativeY - offset), "up");
+                        ActionValue = -this.GoObjectPositionDistance(this.RoleX, this.RoleInitialY + Math.floor(this.RoleRelativeY - offset), this.RoleZ, "up");
                         break;
                     }
                     default : {
@@ -417,17 +471,16 @@ function Vega(name, role) {
                             ActionValue -= 5;
                         }
                         if(this.Memory_Maze[this.RoleZ][this.RoleInitialX + Math.ceil(this.RoleRelativeX + 5*offset)][this.RoleY].passtimes == 0) {
-                            ++ActionValue;
+                            ActionValue += 5;
                         }
-                        // this.times = 0;
-                        ActionValue += this.ImaginaryGo(this.RoleInitialX + Math.ceil(this.RoleRelativeX + 5*offset), this.RoleY, "right");
+                        ActionValue += this.ImaginaryGo(this.RoleInitialX + Math.ceil(this.RoleRelativeX + 5*offset), this.RoleY, this.RoleZ, "right");
                         break;
                     }
                     case "SearchMaze" : {
                         break;
                     }
                     case "ChasePlayer" : {
-                        ActionValue = -this.GoObjectPositionDistance(this.RoleInitialX + Math.ceil(this.RoleRelativeX + offset), this.RoleY, "right");
+                        ActionValue = -this.GoObjectPositionDistance(this.RoleInitialX + Math.ceil(this.RoleRelativeX + offset), this.RoleY, this.RoleZ, "right");
                         break;
                     }
                     default : {
@@ -443,17 +496,16 @@ function Vega(name, role) {
                             ActionValue -= 5;
                         }
                         if(this.Memory_Maze[this.RoleZ][this.RoleX][this.RoleInitialY + Math.ceil(this.RoleRelativeY + 5*offset)].passtimes == 0) {
-                           ++ActionValue;
+                            ActionValue += 5;
                         }
-                        // this.times = 0;
-                        ActionValue += this.ImaginaryGo(this.RoleX, this.RoleInitialY + Math.ceil(this.RoleRelativeY + 5*offset), "down");
+                        ActionValue += this.ImaginaryGo(this.RoleX, this.RoleInitialY + Math.ceil(this.RoleRelativeY + 5*offset), this.RoleZ, "down");
                         break;
                     }
                     case "SearchMaze" : {
                         break;
                     }
                     case "ChasePlayer" : {
-                        ActionValue = -this.GoObjectPositionDistance(this.RoleX, this.RoleInitialY + Math.ceil(this.RoleRelativeY + offset), "down");
+                        ActionValue = -this.GoObjectPositionDistance(this.RoleX, this.RoleInitialY + Math.ceil(this.RoleRelativeY + offset), this.RoleZ, "down");
                         break;
                     }
                     default : {
@@ -473,7 +525,7 @@ function Vega(name, role) {
                                 {Strategy : "SearchMaze", Value : this.ValueSystem("SearchMaze")},
                                 {Strategy : "ChasePlayer", Value : this.ValueSystem("ChasePlayer")}];
         NextStrategyList.sort(function(a, b){return b.Value-a.Value});
-        for(var i = NextStrategyList.length-1; i >= 1; --i) {
+        for(i = NextStrategyList.length-1; i >= 1; --i) {
             if(NextStrategyList[i].Value < NextStrategyList[0].Value) {
                 NextStrategyList.pop();
             }
@@ -482,34 +534,39 @@ function Vega(name, role) {
             }
         }
         this.Strategy = NextStrategyList[RandomNum(0,NextStrategyList.length-1)].Strategy;
-        //  console.log(this.Strategy);
+        // console.log(this.Strategy);
     };
-    //   this.times = 0;
+      this.times = 0;
 	this.ActionThinking = function() {
     //  if(this.times++%60 == 0) {
-    //      console.log(this.Memory_Maze[this.RoleZ]);
+    //     console.log(this.RoleInitialX);
+    //     console.log(this.RoleInitialY);
+    //     console.log(this.RoleRelativeX);
+    //     console.log(this.RoleRelativeY);
+    //     console.log(this.Memory_Maze);
     //  }
         var NextActionList = [];
         //NextActionList.push({Action : "NoAction", Value : -10});
-        if(this.Memory_Maze[this.RoleZ][this.RoleInitialX + Math.floor(this.RoleRelativeX-offset)][this.RoleY].object == "road" 
+        if(this.Memory_Maze[this.RoleZ][this.RoleInitialX + Math.floor(this.RoleRelativeX-offset)][this.RoleY].object != "wall" 
         && Math.abs((this.RoleY) - (this.RoleInitialY + this.RoleRelativeY)) <= BorderTolerance/2) {
             NextActionList.push({Action : "MoveLeft", Value : this.ValueSystem("MoveLeft")});
         }
-        if(this.Memory_Maze[this.RoleZ][this.RoleX][this.RoleInitialY + Math.floor(this.RoleRelativeY-offset)].object == "road" 
+        if(this.Memory_Maze[this.RoleZ][this.RoleX][this.RoleInitialY + Math.floor(this.RoleRelativeY-offset)].object != "wall" 
         && Math.abs((this.RoleX) - (this.RoleInitialX + this.RoleRelativeX)) <= BorderTolerance/2) {
             NextActionList.push({Action : "MoveUp", Value : this.ValueSystem("MoveUp")});
         }
-        if(this.Memory_Maze[this.RoleZ][this.RoleInitialX + Math.ceil(this.RoleRelativeX+offset)][this.RoleY].object == "road" 
+        if(this.Memory_Maze[this.RoleZ][this.RoleInitialX + Math.ceil(this.RoleRelativeX+offset)][this.RoleY].object != "wall" 
         && Math.abs((this.RoleY) - (this.RoleInitialY + this.RoleRelativeY)) <= BorderTolerance/2) {
             NextActionList.push({Action : "MoveRight", Value : this.ValueSystem("MoveRight")});
         }
-        if(this.Memory_Maze[this.RoleZ][this.RoleX][this.RoleInitialY + Math.ceil(this.RoleRelativeY+offset)].object == "road" 
+        if(this.Memory_Maze[this.RoleZ][this.RoleX][this.RoleInitialY + Math.ceil(this.RoleRelativeY+offset)].object != "wall" 
         && Math.abs((this.RoleX) - (this.RoleInitialX + this.RoleRelativeX)) <= BorderTolerance/2) {
             NextActionList.push({Action : "MoveDown", Value : this.ValueSystem("MoveDown")});
         }
-        //   console.log(NextActionList);
+
+        // console.log(NextActionList);
         NextActionList.sort(function(a, b){return b.Value-a.Value});
-        for(var i = NextActionList.length-1; i >= 1; --i) {
+        for(i = NextActionList.length-1; i >= 1; --i) {
             if(NextActionList[i].Value < NextActionList[0].Value) {
                 NextActionList.pop();
             }
@@ -517,7 +574,7 @@ function Vega(name, role) {
                 break;
             }
         }
-        //   console.log(NextActionList[0]);
+        // console.log(NextActionList[0]);
         switch(NextActionList[RandomNum(0,NextActionList.length-1)].Action) {
             case "MoveLeft" : {
                 this.Action_Release_AllKey();

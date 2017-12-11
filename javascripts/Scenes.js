@@ -1,424 +1,252 @@
 var GameMenuScene = {
-
-    selection : 0,
-    
-	MenuItems : [new MenuItem("單機遊戲", centerX, GC.height/7 * 3),
+	selection : 0,
+	MenuItems : [new MenuItem("開始探險", centerX, GC.height/7 * 3),
 			     new MenuItem("多人連線", centerX, GC.height/7 * 4),
-			     new MenuItem("設定", centerX, GC.height/7 * 5),
-                /*new MenuItem("離開遊戲", centerX, GC.height/7 * 6)*/],
-	
+				 new MenuItem("探險準備", centerX, GC.height/7 * 5),
+				 new MenuItem("設定", 	centerX, GC.height/7 * 6)],	
 	RecreateMenuItems : function() {
-		this.MenuItems = [new MenuItem("單機遊戲", centerX, GC.height/7 * 3),
+		this.MenuItems = [new MenuItem("開始探險", centerX, GC.height/7 * 3),
 						  new MenuItem("多人連線", centerX, GC.height/7 * 4),
-						  new MenuItem("設定", centerX, GC.height/7 * 5),
-						  /*new MenuItem("離開遊戲", centerX, GC.height/7 * 6)*/];
+						  new MenuItem("探險準備", centerX, GC.height/7 * 5),
+						  new MenuItem("設定", 	 centerX, GC.height/7 * 6)];
 	},
-
 	GetSelection : function() {
 		return this.selection;
 	},
-
 	render : function() {
-		this.RenderBackground();
-		this.RenderTitle();
-		this.RenderMenu();
-    },
-    
-	clear : function() {
-		GCCT.fillStyle = "White";
-		GCCT.fillRect(0, 0, GC.width, GC.height);
-    },
-    
-	RenderTitle : function() {
+		// 畫背景
+		GCCT.fillStyle = MyGray;
+		GCCT.fillRect(0,0,GC.width,GC.height);
+
+		// 畫標題
 		GCCT.strokeStyle = "Brown";
 		GCCT.font = "80px verdana";
 		GCCT.textAlign = "center";
 		GCCT.textBaseline = "middle"; 
 		GCCT.strokeText("未知迷攻", centerX, GC.height/7);
-    },
-    
-	RenderMenu : function() {
-		GCCT.font = "40px verdana";
+
+		// 畫選單
 		GCCT.strokeStyle = "Black";
-		GCCT.textAlign = "center";
-		GCCT.textBaseline = "middle"; 
-		for(var i = 0; i < this.MenuItems.length; ++i) {
-			GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].positionX, this.MenuItems[i].positionY);
+		GCCT.font = "40px verdana";
+		for(i = 0; i < this.MenuItems.length; ++i) {
+			GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].x, this.MenuItems[i].y);
 		}	
 		this.OnSelect();
     },
-	
-	RenderBackground : function() {
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(0,0,GC.width,GC.height);
-	},
-
+	clear : function() {
+		GCCT.fillStyle = "White";
+		GCCT.fillRect(0, 0, GC.width, GC.height);
+    },
 	OnSelect : function() {
+		var width = 2*GCCT.measureText("開始探險").width;
+		var height = 1.2*GCCT.measureText("開").width;
+		var text = this.MenuItems[this.selection].name;
+		var centerX = this.MenuItems[this.selection].x;
+		var centerY = this.MenuItems[this.selection].y;
         GCCT.fillStyle = "AliceBlue";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 150, 
-					  this.MenuItems[this.selection%4].positionY - 25, 300, 50);
-		GCCT.strokeStyle = "Black";
-		GCCT.strokeText(this.MenuItems[this.selection%4].name, 
-						this.MenuItems[this.selection%4].positionX, 
-                        this.MenuItems[this.selection%4].positionY);
+		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height);	// 高度有點不對稱，所以乘上1.1
+		GCCT.strokeText(text, centerX, centerY);
 	},
 	UnSelect : function() {
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 160, 
-					  this.MenuItems[this.selection%4].positionY - 35, 322, 70);
-		GCCT.strokeText(this.MenuItems[this.selection%4].name, 
-						this.MenuItems[this.selection%4].positionX, 
-						this.MenuItems[this.selection%4].positionY);
+		var width = 2*GCCT.measureText("開始探險").width+1;
+		var height = 1.2*GCCT.measureText("開").width+1;
+		var text = this.MenuItems[this.selection].name;
+		var centerX = this.MenuItems[this.selection].x;
+		var centerY = this.MenuItems[this.selection].y;
+		GCCT.fillStyle = MyGray;
+		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height);	// 高度有點不對稱，所以乘上1.1
+		GCCT.strokeText(text, centerX, centerY);
 	},
 	Down : function() {
 		this.UnSelect();
-		if(this.selection == 2) {
-			this.selection = 0;
-		}
-		else {
-			++this.selection;
-		}
+		this.selection = (this.selection == this.MenuItems.length-1) ? 0 : (this.selection + 1);
 		this.OnSelect();
 	},
 	Up : function() {
 		this.UnSelect();
-		if(this.selection == 0) {
-			this.selection = 2;
-		}
-		else {
-			--this.selection;
-		}
+		this.selection = (this.selection == 0) ? (this.MenuItems.length-1) : (this.selection - 1);
 		this.OnSelect();
-	},
+	}
 };
 
 var OptionScene = {
-
 	state : "OptionSelect",
-
 	selection : 0,
-
 	MazeLength : 25,
-
 	MazeWidth : 25,
-
 	MazeHeight : 5,
-
 	MaxMazeLength : 50,
-
 	MaxMazeWidth : 50,
-
 	MaxMazeHeight : 50,
-
 	MinMazeLength : 10,
-
 	MinMazeWidth : 10,
-
 	MinMazeHeight : 1,
-
 	GetMazeLength : function() {
 		return this.MazeLength;
 	},
-
 	GetMazeWidth : function() {
 		return this.MazeWidth;
 	},
-
 	GetMazeHeight : function() {
 		return this.MazeHeight;
 	},
-	
 	MenuItems : [new MenuItem("迷宮長度 : " + this.MazeLength, centerX, GC.height*3/7),
-	new MenuItem("迷宮寬度 : " + this.MazeWidth, centerX, GC.height*3.75/7),
-	new MenuItem("迷宮高度 : " + (this.MazeHeight >= 10 ? "" : "0") + this.MazeHeight, centerX, GC.height*4.5/7),
-	new MenuItem("返回", centerX, GC.height*6/7)],
-
+				 new MenuItem("迷宮寬度 : " + this.MazeWidth, centerX, GC.height*3.75/7),
+				 new MenuItem("迷宮高度 : " + ((this.MazeHeight >= 10) ? "" : "0") + this.MazeHeight, centerX, GC.height*4.5/7),
+				 new MenuItem("返回", centerX, GC.height*6/7)],
 	RecreateMenuItems : function() {
-	this.MenuItems = [new MenuItem("迷宮長度 : " + this.MazeLength, centerX, GC.height*3/7),
-			 new MenuItem("迷宮寬度 : " + this.MazeWidth, centerX, GC.height*3.75/7),
-			 new MenuItem("迷宮高度 : " + (this.MazeHeight >= 10 ? "" : "0") + this.MazeHeight, centerX, GC.height*4.5/7),
-			 new MenuItem("返回", centerX, GC.height*6/7)];
+		this.MenuItems = [new MenuItem("迷宮長度 : " + this.MazeLength, centerX, GC.height*3/7),
+			 			  new MenuItem("迷宮寬度 : " + this.MazeWidth, centerX, GC.height*3.75/7),
+						  new MenuItem("迷宮高度 : " + ((this.MazeHeight >= 10) ? "" : "0") + this.MazeHeight, centerX, GC.height*4.5/7),
+						  new MenuItem("返回", centerX, GC.height*6/7)];
 	},
-
-	SetState : function(state) {
-		this.state = state;
-	},
-
 	GetState : function() {
 		return this.state;
 	},
-
 	GetSelection : function() {
 		return this.selection;
 	},
-
 	clear : function() {
 		GCCT.fillStyle = "White";
 		GCCT.fillRect(0, 0, GC.width, GC.height);
 	},
-	
 	render : function() {
-		this.RenderBackground();
-		this.RenderTitle();
-		this.RenderOption();
-	},
+		// 畫背景
+		GCCT.fillStyle = MyGray;
+		GCCT.fillRect(0,0,GC.width,GC.height);
 
-	RenderTitle : function() {
+		// 畫標題
 		GCCT.strokeStyle = "Blue";
 		GCCT.font = "60px verdana";
 		GCCT.textAlign = "center";
 		GCCT.textBaseline = "middle"; 
 		GCCT.strokeText("Option", centerX, GC.height/7);
-	},
 
-	RenderOption : function() {
+		// 畫選單
 		GCCT.strokeStyle = "Black";
 		GCCT.font = "40px verdana";
-		GCCT.textAlign = "center";
-		GCCT.textBaseline = "middle"; 
-		for(var i = 0; i < this.MenuItems.length; ++i) {
-			GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].positionX, this.MenuItems[i].positionY);
+		for(i = 0; i < this.MenuItems.length; ++i) {
+			GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].x, this.MenuItems[i].y);
 		}
-		this.OnSelect();
+		if(this.state == "OptionSelect") {
+			this.OnSelect();
+		}
+		else {
+			this.OnMazeValueSelect();
+		}
 	},
-
-	RenderMenu : function() {
-		GCCT.strokeStyle = "Black";
-		GCCT.font = "40px verdana";
-		GCCT.textAlign = "center";
-		GCCT.textBaseline = "middle"; 
-		GCCT.strokeText("Back", centerX, GC.height*6/7);
-	},
-
-	RenderMenuItem : function(i) {
-		GCCT.strokeStyle = "Black";
-		GCCT.font = "40px verdana";
-		GCCT.textAlign = "center";
-		GCCT.textBaseline = "middle"; 
-		GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].positionX, this.MenuItems[i].positionY);
-	},
-
-	RenderBackground : function() {
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(0,0,GC.width,GC.height);
-	},
-
-	ClearMenuItem : function(i) {
-		GCCT.fillStyle = "White";
-		GCCT.fillRect(this.MenuItems[i].positionX - 310, 
-								 this.MenuItems[i].positionY - 35, 620, 70);
-	},
-
 	OnSelect : function() {
+		this.state = "OptionSelect";
+		var width = 2*GCCT.measureText("迷宮長度 : 25").width;
+		var height = 1.2*GCCT.measureText("迷").width;
+		var text = this.MenuItems[this.selection].name;
+		var centerX = this.MenuItems[this.selection].x;
+		var centerY = this.MenuItems[this.selection].y;
         GCCT.fillStyle = "AliceBlue";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 300, 
-					  			 this.MenuItems[this.selection%4].positionY - 25, 600, 50);
-		GCCT.strokeText(this.MenuItems[this.selection%4].name, 
-						this.MenuItems[this.selection%4].positionX, 
-                        this.MenuItems[this.selection%4].positionY);
+		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height); 	// 高度有點不對稱，所以乘上1.1
+		GCCT.strokeText(text, centerX, centerY);
 	},
-
 	UnSelect : function() {
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 310, 
-					  			 this.MenuItems[this.selection%4].positionY - 35, 620, 70);
-		GCCT.strokeText(this.MenuItems[this.selection%4].name, 
-						this.MenuItems[this.selection%4].positionX, 
-						this.MenuItems[this.selection%4].positionY);
+		var width = 2*GCCT.measureText("迷宮長度 : 25").width+1;
+		var height = 1.2*GCCT.measureText("迷").width+1;
+		var text = this.MenuItems[this.selection].name;
+		var centerX = this.MenuItems[this.selection].x;
+		var centerY = this.MenuItems[this.selection].y;
+		GCCT.fillStyle = MyGray;
+		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height); 	// 高度有點不對稱，所以乘上1.1
+		GCCT.strokeText(text, centerX, centerY);
 	},
-
-	OnMazeLengthSelect : function() {
-		this.ClearMenuItem(0);
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 310, 
-					  			 this.MenuItems[this.selection%4].positionY - 40, 620, 80);
+	OnMazeValueSelect : function() {
+		this.state = "MazeValueSetting";
+		var width = 1.5*GCCT.measureText("25").width;
+		var offsetX = GCCT.measureText("度 : 2").width-8;
+		var height = 1.2*GCCT.measureText("迷").width;
+		var text = this.MenuItems[this.selection].name;
+		var centerX = this.MenuItems[this.selection].x;
+		var centerY = this.MenuItems[this.selection].y;
 		GCCT.fillStyle = "AliceBlue";
-		GCCT.fillRect(this.MenuItems[0].positionX + 63, 
-								   this.MenuItems[0].positionY - 25, 81, 50);
-		this.RenderMenuItem(0);
+		GCCT.fillRect(centerX + offsetX - width/2, centerY - height/2, width, 1.1*height);
+		GCCT.strokeText(text, centerX, centerY);
 	},
-
-	OnMazeWidthSelect : function() {
-		this.ClearMenuItem(1);
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 310, 
-					  			 this.MenuItems[this.selection%4].positionY - 40, 620, 80);
-		GCCT.fillStyle = "AliceBlue";
-		GCCT.fillRect(this.MenuItems[1].positionX + 63, 
-								   this.MenuItems[1].positionY - 25, 80, 50);
-		this.RenderMenuItem(1);
-	},
-
-	OnMazeHeightSelect : function() {
-		this.ClearMenuItem(2);
-		GCCT.fillStyle = "RGB(210,210,210)";
-		GCCT.fillRect(this.MenuItems[this.selection%4].positionX - 310, 
-					  			 this.MenuItems[this.selection%4].positionY - 40, 620, 80);
-		GCCT.fillStyle = "AliceBlue";
-		GCCT.fillRect(this.MenuItems[2].positionX + 63, 
-								   this.MenuItems[2].positionY - 25, 81, 50);
-		this.RenderMenuItem(2);
-	},
-
 	Left : function() {
-		if(this.state == "MazeLengthSetting") {
-			this.MazeLength -= 10;
-			if(this.MazeLength < this.MinMazeLength) {
-				this.MazeLength = this.MinMazeLength;
-			}
+		if(this.state != "MazeValueSetting") {
+			return;
+		}
+		if(this.selection == 0) {
+			this.MazeLength = (this.MazeLength - 10 < this.MinMazeLength) ? this.MinMazeLength : (this.MazeLength - 10);
 			this.MenuItems[0].name = "迷宮長度 : " + this.MazeLength;
-			this.ClearMenuItem(0);
-			this.OnMazeLengthSelect();
 		}
-		else if(this.state == "MazeWidthSetting" ) {
-			this.MazeWidth -= 10;
-			if(this.MazeWidth < this.MinMazeWidth) {
-				this.MazeWidth = this.MinMazeWidth;
-			}
+		else if(this.selection == 1) {
+			this.MazeWidth = (this.MazeWidth - 10 < this.MinMazeWidth) ? this.MinMazeWidth : (this.MazeWidth - 10);
 			this.MenuItems[1].name = "迷宮寬度 : " + this.MazeWidth;
-			this.ClearMenuItem(1);
-			this.OnMazeWidthSelect();
 		}
-		else if(this.state == "MazeHeightSetting") {
-			this.MazeHeight -= 10;
-			if(this.MazeHeight < this.MinMazeHeight) {
-				this.MazeHeight = this.MinMazeHeight;
-			}
+		else if(this.selection == 2) {
+			this.MazeHeight = (this.MazeHeight - 10 < this.MinMazeHeight) ? this.MinMazeHeight : (this.MazeHeight - 10);
 			this.MenuItems[2].name = "迷宮高度 : " + (this.MazeHeight >= 10 ? "" : "0") + this.MazeHeight;
-			this.ClearMenuItem(2);
-			this.OnMazeHeightSelect();
 		}
+		this.UnSelect();
+		this.OnMazeValueSelect();
 	},
-
 	Up : function() {
 		if(this.state == "OptionSelect") {
 			this.UnSelect();
-			if(this.selection == 0) {
-				this.selection = 3;
-			}
-			else {
-				--this.selection;
-			}
+			this.selection = (this.selection == 0) ? (this.MenuItems.length - 1) : (this.selection - 1);
 			this.OnSelect();
 		}
-		else if(this.state == "MazeLengthSetting") {
-			++this.MazeLength;
-			if(this.MazeLength > this.MaxMazeLength) {
-				this.MazeLength = this.MaxMazeLength;
-			}
+		else if(this.selection == 0) {
+			this.MazeLength = ((this.MazeLength + 1) > this.MaxMazeLength) ? this.MaxMazeLength : (this.MazeLength + 1);
 			this.MenuItems[0].name = "迷宮長度 : " + this.MazeLength;
-			this.ClearMenuItem(0);
-			this.OnMazeLengthSelect();
 		}
-		else if(this.state == "MazeWidthSetting" ) {
-			++this.MazeWidth;
-			if(this.MazeWidth > this.MaxMazeWidth) {
-				this.MazeWidth = this.MaxMazeWidth;
-			}
+		else if(this.selection == 1) {
+			this.MazeWidth = ((this.MazeWidth + 1) > this.MaxMazeWidth) ? this.MaxMazeWidth : (this.MazeWidth + 1);
 			this.MenuItems[1].name = "迷宮寬度 : " + this.MazeWidth;
-			this.ClearMenuItem(1);
-			this.OnMazeWidthSelect();
 		}
-		else if(this.state == "MazeHeightSetting") {
-			++this.MazeHeight;
-			if(this.MazeHeight > this.MaxMazeHeight) {
-				this.MazeHeight = this.MaxMazeHeight;
-			}
+		else if(this.selection == 2) {
+			this.MazeHeight = ((this.MazeHeight + 1) > this.MaxMazeHeight) ? this.MaxMazeHeight : (this.MazeHeight + 1);
 			this.MenuItems[2].name = "迷宮高度 : " + (this.MazeHeight >= 10 ? "" : "0") + this.MazeHeight;
-			this.ClearMenuItem(2);
-			this.OnMazeHeightSelect();
 		}
+		this.UnSelect();
+		this.OnMazeValueSelect();
 	},
-
 	Right : function() {
-		if(this.state == "MazeLengthSetting") {
-			this.MazeLength += 10;
-			if(this.MazeLength > this.MaxMazeLength) {
-				this.MazeLength = this.MaxMazeLength;
-			}
+		if(this.state != "MazeValueSetting") {
+			return;
+		}
+		if(this.selection == 0) {
+			this.MazeLength = (this.MazeLength + 10 > this.MaxMazeLength) ? this.MaxMazeLength : (this.MazeLength + 10);
 			this.MenuItems[0].name = "迷宮長度 : " + this.MazeLength;
-			this.ClearMenuItem(0);
-			this.OnMazeLengthSelect();
 		}
-		else if(this.state == "MazeWidthSetting" ) {
-			this.MazeWidth += 10;
-			if(this.MazeWidth > this.MaxMazeWidth) {
-				this.MazeWidth = this.MaxMazeWidth;
-			}
+		else if(this.selection == 1) {
+			this.MazeWidth = (this.MazeWidth + 10 > this.MaxMazeWidth) ? this.MaxMazeWidth : (this.MazeWidth + 10);
 			this.MenuItems[1].name = "迷宮寬度 : " + this.MazeWidth;
-			this.ClearMenuItem(1);
-			this.OnMazeWidthSelect();
 		}
-		else if(this.state == "MazeHeightSetting") {
-			this.MazeHeight += 10;
-			if(this.MazeHeight > this.MaxMazeHeight) {
-				this.MazeHeight = this.MaxMazeHeight;
-			}
+		else if(this.selection == 2) {
+			this.MazeHeight = (this.MazeHeight + 10 > this.MaxMazeHeight) ? this.MaxMazeHeight : (this.MazeHeight + 10);
 			this.MenuItems[2].name = "迷宮高度 : " + (this.MazeHeight >= 10 ? "" : "0") + this.MazeHeight;
-			this.ClearMenuItem(2);
-			this.OnMazeHeightSelect();
 		}
+		this.UnSelect();
+		this.OnMazeValueSelect();
 	},
-
 	Down : function() {
 		if(this.state == "OptionSelect") {
 			this.UnSelect();
-			if(this.selection == 3) {
-				this.selection = 0;
-			}
-			else {
-				++this.selection;
-			}
+			this.selection = (this.selection == this.MenuItems.length-1) ? 0 : (this.selection + 1);
 			this.OnSelect();
 		}
-		else if(this.state == "MazeLengthSetting") {
-			--this.MazeLength;
-			if(this.MazeLength < this.MinMazeLength) {
-				this.MazeLength = this.MinMazeLength;
-			}
+		else if(this.selection == 0) {
+			this.MazeLength = ((this.MazeLength - 1) < this.MinMazeLength) ? this.MinMazeLength : (this.MazeLength - 1);
 			this.MenuItems[0].name = "迷宮長度 : " + this.MazeLength;
-			this.ClearMenuItem(0);
-			this.OnMazeLengthSelect();
 		}
-		else if(this.state == "MazeWidthSetting" ) {
-			--this.MazeWidth;
-			if(this.MazeWidth < this.MinMazeWidth) {
-				this.MazeWidth = this.MinMazeWidth;
-			}
+		else if(this.selection == 1) {
+			this.MazeWidth = ((this.MazeWidth - 1) < this.MinMazeWidth) ? this.MinMazeWidth : (this.MazeWidth - 1);
 			this.MenuItems[1].name = "迷宮寬度 : " + this.MazeWidth;
-			this.ClearMenuItem(1);
-			this.OnMazeWidthSelect();
 		}
-		else if(this.state == "MazeHeightSetting") {
-			--this.MazeHeight;
-			if(this.MazeHeight < this.MinMazeHeight) {
-				this.MazeHeight = this.MinMazeHeight;
-			}
+		else if(this.selection == 2) {
+			this.MazeHeight = ((this.MazeHeight - 1) < this.MinMazeHeight) ? this.MinMazeHeight : (this.MazeHeight - 1);
 			this.MenuItems[2].name = "迷宮高度 : " + (this.MazeHeight >= 10 ? "" : "0") + this.MazeHeight;
-			this.ClearMenuItem(2);
-			this.OnMazeHeightSelect();
 		}
-	},
-
-	Enter : function() {
-		this.clear();
-		return this.selection;
-	},
-
-	MazeLengthSetting : function() {
 		this.UnSelect();
-	},
-
-	MazeWidthSetting : function() {
-		this.UnSelect();
-	},
-
-	MazeHeightSetting : function() {
-		this.UnSelect();
-	},
-
-	CancelSetting : function() {
-		this.OnSelect();
+		this.OnMazeValueSelect();
 	}
 };
 
@@ -435,13 +263,8 @@ var GameScene = {
 	SkillCDLoopRadius : 1.2*this.HalfFixSL,
 	CenterGridLeftTopX : centerX - this.HalfSL,
 	CenterGridLeftTopY : centerY - this.HalfSL,
-
-	// times : 0,
 	ViewScope : "unknown",
 	ChangeItemAnimationRequest : false,
-	// GoUpAnimationRequest : false,
-	// GoDownAnimationRequest : false,
-	// AnimationTimes : 60,
 	ItemChangeDirection :　"unknown",
 	SetSL : function(ArgSL) {
 		this.SL = ArgSL;
@@ -465,32 +288,6 @@ var GameScene = {
 		return this.maze;
 	},
 
-	// 暫不支援z軸
-	// render : function() {
-	// 	GCCT.strokeStyle = "RGB(180,180,180)";
-	// 	for(var x = 0; x < this.maze.length; ++x) {
-	// 		for(var y = 0; y < this.maze[x].length; ++y) {
-	// 			GCCT.beginPath();
-	// 			if(this.maze[x][y].top == false) {
-	// 				GCCT.moveTo(x*GC.width/this.maze.length,y*GC.width/this.maze[x].length);
-	// 				GCCT.lineTo(x*GC.width/this.maze.length + GC.width/this.maze.length,y*GC.width/this.maze[x].length);
-	// 			}
-	// 			if(this.maze[x][y].right == false) {
-	// 				GCCT.moveTo(x*GC.width/this.maze.length + GC.width/this.maze.length,y*GC.width/this.maze[x].length);
-	// 				GCCT.lineTo(x*GC.width/this.maze.length + GC.width/this.maze.length,y*GC.width/this.maze[x].length + GC.width/this.maze[x].length);
-	// 			}
-	// 			if(this.maze[x][y].down == false) {
-	// 				GCCT.moveTo(x*GC.width/this.maze.length + GC.width/this.maze.length,y*GC.width/this.maze[x].length + GC.width/this.maze[x].length);
-	// 				GCCT.lineTo(x*GC.width/this.maze.length,y*GC.width/this.maze[x].length + GC.width/this.maze[x].length);
-	// 			}
-	// 			if(this.maze[x][y].left == false) {
-	// 				GCCT.moveTo(x*GC.width/this.maze.length,y*GC.width/this.maze[x].length + GC.width/this.maze[x].length);
-	// 				GCCT.lineTo(x*GC.width/this.maze.length,y*GC.width/this.maze[x].length);
-	// 			}
-	// 			GCCT.stroke();
-	// 		}
-	// 	}			
-	// },
 	AllBlack : function() {
 		GCCT.fillStyle = "Black";
 		GCCT.fillRect(0,0,GC.width,GC.height);
@@ -526,12 +323,8 @@ var GameScene = {
 		GCCT.fill();
 
 		// 地圖繪製
-		// GCCT.strokeStyle = "Black";
-		// GCCT.lineWidth = 1;
-		// GCCT.lineCap = "round";
-		// GCCT.beginPath();
-		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
-			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+		for(x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
+			for(y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
 				if(RoleFloorY + y == -1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1) {
 					GCCT.drawImage(OutOfMazeWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
@@ -587,9 +380,8 @@ var GameScene = {
 				}
 			}
 		}
-		// GCCT.stroke();
 		// 地圖上物件繪製
-		for(var i = 0; i <= WaitDrawObjects.objects.length-1; ++i) {
+		for(i = 0; i <= WaitDrawObjects.objects.length-1; ++i) {
 			GCCT.save();
 			WaitDrawObjects.objects[i].update();
 			WaitDrawObjects.objects[i].DrawingSetting();
@@ -610,8 +402,8 @@ var GameScene = {
 
 		// 蓋過地圖上物件的牆繪製
 		GCCT.save();
-		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
-			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+		for(x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
+			for(y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
 				if(RoleFloorY + y >= 0 && RoleFloorY + y <= this.maze[RoleIntZ][RoleFloorX].length - 1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1 && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object != "wall" && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object == "wall") {
 					GCCT.drawImage(MazeFloorWall,this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
@@ -620,7 +412,6 @@ var GameScene = {
 		GCCT.restore();
 
 		//視野漸層效果繪製
-		// console.log(RoleViewScope);
 		var grd = GCCT.createRadialGradient(centerX, centerY, this.HalfSL, centerX, centerY, this.SL*RoleViewScope);
 		grd.addColorStop(0, "RGBA(0,0,0,0)");
 		grd.addColorStop(1, "RGBA(0,0,0,1)");
@@ -692,25 +483,29 @@ var GameScene = {
 		// Skill1技能格繪製
 		GCCT.beginPath();
 		if(role.GetSkill1CD() != 0) {
+			GCCT.save();
 			GCCT.strokeStyle = "White";
 			GCCT.lineWidth = 4;
 			GCCT.arc(innerWidth - 3*this.FixedSL/2,innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill1CD()/role.GetMaxSkill1CD());
 			GCCT.stroke();
+			GCCT.restore();
 		}
 		GCCT.drawImage(role.GetSkill1Image(), innerWidth - 2*this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
 		
 		// Skill2技能格繪製
 		GCCT.beginPath();
 		if(role.GetSkill2CD() != 0) {
+			GCCT.save();
 			GCCT.strokeStyle = "White";
 			GCCT.lineWidth = 4;
 			GCCT.arc(innerWidth - this.FixedSL/2, innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill2CD()/role.GetMaxSkill2CD());
 			GCCT.stroke();
+			GCCT.restore();
 		}
 		GCCT.drawImage(role.GetSkill2Image(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
 
 		// 玩家擁有物品繪製
-		for(var i = -2; i <= 5; ++i) {
+		for(i = -2; i <= 5; ++i) {
 			if(role.GetItem(i+2) != "NoItem") {
 				GCCT.drawImage(role.GetItem(i+2).GetImage(), this.CenterGridLeftTopX + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)),this.CenterGridLeftTopY + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
 			}
@@ -718,7 +513,7 @@ var GameScene = {
 
 		// 物品環繪製
 		GCCT.save();
-		for(var i = -2; i <= 5; ++i) {
+		for(i = -2; i <= 5; ++i) {
 			if(i == -2) {
 				GCCT.globalAlpha = 1;
 			}
