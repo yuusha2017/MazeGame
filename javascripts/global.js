@@ -14,6 +14,8 @@ var AIListLength = 0;
 
 // 計算遊戲時間
 var GameTime = 0;
+var minute = "00";
+var second = "00";
 
 // 計算每秒幀數
 var CalFPS = 0;

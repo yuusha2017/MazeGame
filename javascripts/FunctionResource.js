@@ -516,6 +516,7 @@ function LoadImage() {
 	flash.src = "images\\flash.png";
 	sheep.src = "images\\sheep.png";
 	wolf.src = "images\\wolf.png";
+	goldcoin.src = "images\\GoldCoin.png";
 }
 
 function ObjectPositionInit(maze, RoleList) {
@@ -543,4 +544,16 @@ function IsOutOfMaze(maze, x, y) {
 
 function distance(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+}
+
+function IsSamePosition(object1, object2) {
+	return (object1.getX() == object2.getX() && object1.getY() == object2.getY() && object1.getZ() == object2.getZ()) ? true : false;
+}
+
+function GoldCoinGenerator(maze) {
+	var aGoldCoin = new GoldCoin(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+	while(maze[aGoldCoin.getZ()][aGoldCoin.getX()][aGoldCoin.getY()].object != "road") {
+		aGoldCoin.SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+	}
+	return aGoldCoin;
 }

@@ -385,9 +385,8 @@ var GameScene = {
 		// 地圖上物件繪製
 		for(i = 0; i <= WaitDrawObjects.objects.length-1; ++i) {
 			GCCT.save();
-			WaitDrawObjects.objects[i].update();
 			WaitDrawObjects.objects[i].DrawingSetting();
-			if(Math.round(WaitDrawObjects.objects[i].getZ()) == RoleIntZ && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= RoleViewScope && WaitDrawObjects.objects[i].GetState() == "visible") {
+			if(Math.round(WaitDrawObjects.objects[i].getZ()) == RoleIntZ && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= RoleViewScope) {
 				GCCT.drawImage(WaitDrawObjects.objects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects.objects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects.objects[i].getY() - role.getY()), this.SL, this.SL);
 			}
 			GCCT.restore();

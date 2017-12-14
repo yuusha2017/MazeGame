@@ -27,6 +27,7 @@ var MazeWallUpPassageUp = new Image();
 var MazeWallRightPassageUp = new Image();
 var MazeWallDownPassageUp = new Image();
 var MazeWallLeftPassageUp = new Image();
+var goldcoin = new Image();
 var treasure = new Image();
 var exit = new Image();
 var ItemBorder = new Image();
@@ -93,7 +94,7 @@ function BaseObj(argX, argY, argZ, ArgImg) {
 	this.SetState = function(ArgState) {
 		state = ArgState;
 	};
-	this.update = function() {
+	this.update = function(progress) {
 		return;
 	};
 	this.DrawingSetting = function() {
@@ -251,19 +252,19 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	this.Skill2 = function() {
 		return;
 	};
-	this.update = function() {
-		if(this.GetSkill1CD() != 0) {
-			this.SetSkill1CD(this.GetSkill1CD()-1);
+	this.update = function(progress) {
+		if(this.GetSkill1CD() > 0) {
+			this.SetSkill1CD((this.GetSkill1CD()-progress < 0 ) ? 0 : (this.GetSkill1CD()-progress));
 		}
-		if(this.GetSkill2CD() != 0) {
-			this.SetSkill2CD(this.GetSkill2CD()-1);
+		if(this.GetSkill2CD() > 0) {
+			this.SetSkill2CD((this.GetSkill2CD()-progress < 0 ) ? 0 : (this.GetSkill2CD()-progress));
 		}
 	};
 }
 
 // 角色" "結構
 function Sheep(argX, argY, argZ) {
-	Role.call(this, argX, argY, argZ, sheep, "Sheep", 4, 4, 1000, 60, "TreasureHunter", flash, flash);
+	Role.call(this, argX, argY, argZ, sheep, "Sheep", 4, 4, 15, 1, "TreasureHunter", flash, flash);
 	this.Skill1 = function() {
 		return;
 	};
@@ -291,19 +292,30 @@ function Sheep(argX, argY, argZ) {
 
 // 角色" "結構
 function Wolf(argX, argY, argZ) {
-	Role.call(this, argX, argY, argZ, wolf, "Wolf", 3, 4, 1200, 1200, "TreasureDefender", flash, flash);
+	Role.call(this, argX, argY, argZ, wolf, "Wolf", 3, 4, 20, 20, "TreasureDefender", flash, flash);
 	var HideTime = 0;
 	var SpeedTime = 0;
 	var OnHide = false;
 	var OnSpeed = false;
+	var SkillSpeed = 2;
 	var visibility = 100;
+	var ExistTime = 0;
 	this.Skill1 = function() {
 		if(this.GetSkill1CD() == 0) {
 			this.SetSkill1CD(this.GetMaxSkill1CD());
-			HideTime = 1;
-			SpeedTime = 300;
 			OnSpeed = true;
-			this.SetSpeed(this.GetSpeed() + 2);
+			SpeedTime = 5;
+			if(HideTime != 0) {
+				HideTime = 0;
+				SkillSpeed = 4;
+				SpeedTime = 2;
+				this.SetSpeed(this.GetSpeed() + SkillSpeed);
+			}
+			else {
+				SkillSpeed = 2;
+				SpeedTime = 5;
+				this.SetSpeed(this.GetSpeed() + SkillSpeed);
+			}
 		}
 	};
 
@@ -312,8 +324,9 @@ function Wolf(argX, argY, argZ) {
 		if(this.GetSkill2CD() == 0) {
 			this.SetSkill2CD(this.GetMaxSkill2CD());
 			SpeedTime = 0;
-			HideTime = 600;
+			HideTime = 10;
 			OnHide = true;
+			this.SetState("invisible");
 			this.SetSpeed(this.GetSpeed() - 0.5);
 			if(visibility > 100) {
 				visibility = 200 - visibility;
@@ -323,47 +336,39 @@ function Wolf(argX, argY, argZ) {
 
 	// 這裡寫得不好
 	this.DrawingSetting = function() {
-		if(OnHide == true) {
-			--HideTime;
-			if(visibility  != 0) {
-				GCCT.globalAlpha = visibility--/100;
-			}
-			else {
-				this.SetState("invisible");
-			}
-			if(HideTime == 0) {
-				this.SetState("visible");
-				OnHide = false;
-				this.SetSpeed(this.GetSpeed() + 0.5);
-				GCCT.globalAlpha = visibility++/100;
-			}
-		}
-		else {
-			++visibility;
-			visibility %= 200;
-			if(visibility > 100) {
-				GCCT.globalAlpha = (200 - visibility)/100;
-			}
-			else {
-				GCCT.globalAlpha = visibility/100;
-			}
-		}
+			GCCT.globalAlpha = visibility;
 	}
-	this.update = function() {
-		if(this.GetSkill1CD() != 0) {
-			this.SetSkill1CD(this.GetSkill1CD()-1);
+	this.update = function(progress) {
+		ExistTime += progress;
+		if(this.GetSkill1CD() > 0) {
+			this.SetSkill1CD((this.GetSkill1CD()-progress < 0 ) ? 0 : (this.GetSkill1CD()-progress));
 		}
-		if(this.GetSkill2CD() != 0) {
-			this.SetSkill2CD(this.GetSkill2CD()-1);
+		if(this.GetSkill2CD() > 0) {
+			this.SetSkill2CD((this.GetSkill2CD()-progress < 0 ) ? 0 : (this.GetSkill2CD()-progress));
 		}
-		if(SpeedTime != 0) {
-			--SpeedTime;
+		if(SpeedTime > 0) {
+			SpeedTime = (SpeedTime-progress < 0) ? 0 : (SpeedTime-progress);
 		}
 		else {
 			if(OnSpeed == true) {
-				this.SetSpeed(this.GetSpeed() - 2);
+				this.SetSpeed(this.GetSpeed() - SkillSpeed);
 				OnSpeed = false;
 			}
+		}
+		if(HideTime > 0) {
+			HideTime = (HideTime-progress < 0) ? 0 : (HideTime-progress);
+		}
+		if(OnHide == true) {
+			visibility = (visibility-Math.sin(progress)/2 < 0) ? 0 : (visibility-Math.sin(progress)/2);
+			if(HideTime == 0) {
+				ExistTime = 0;
+				OnHide = false;
+				this.SetState("visible");
+				this.SetSpeed(this.GetSpeed() + 0.5);
+			}
+		}
+		else {
+			visibility = Math.abs(Math.sin(ExistTime/2));
 		}
 	};
 }
@@ -384,7 +389,7 @@ function Item(argX, argY, argZ, ArgImg) {
 	this.ActiveUse = function() {
 		return;
 	};
-	this.update = function() {
+	this.update = function(progress) {
 		if(this.GetOwner() != "NoOwner") {
 			this.SetState("invisible");
 		} 
@@ -417,14 +422,24 @@ function Exit(argX, argY, argZ) {
 // 閃光效果結構
 function Flash(argX, argY, argZ) {
 	BaseObj.call(this, argX, argY, argZ, flash);
-	var times = 0;
+	var ExistTime = 0;
 	this.DrawingSetting = function() {
-		GCCT.globalAlpha = 1 - times/RefreshFrequency;
+		GCCT.globalAlpha = 1 - ExistTime/0.3;
 	};
-	this.update = function() {
-		times += 3;
-		if(times == RefreshFrequency) {
+	this.update = function(progress) {
+		ExistTime += progress;
+		if(ExistTime > 0.3) {
 			this.SetState("vanish");
 		}
+	};
+}
+
+// 金幣結構
+function GoldCoin(argX, argY, argZ) {
+	BaseObj.call(this, argX, argY, argZ, goldcoin);
+	var ExistTime = 0;
+	this.update = function(progress) {
+		ExistTime += progress;
+		this.setY(Math.round(this.getY()) + Math.sin(3*ExistTime)/10);
 	};
 }

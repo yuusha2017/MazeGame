@@ -15,6 +15,7 @@ var Control = {
     AINumber : 1,
     ViewRoleNum : 0,                    // 觀賞哪個角色視角
     OpeRoleNum : 0,                     // 操作哪個角色
+    GoldCoinList : [],
 
     start : function() {
         this.LoadGameMenuScene ();
@@ -147,32 +148,68 @@ var Control = {
     LoadGameScene : function() {
         this.state = "GameScene";
         this.transition();			// temp
-        this.RoleList = [new Sheep(0,0,0)];
+
+        // 出口與寶藏列入繪畫清單
+        WaitDrawObjects.objects.push(new Exit(0,0,0));
+        WaitDrawObjects.objects.push(new Treasure(0,0,0));
+
+        // 玩家與玩家角色
+        this.RoleList = [new Wolf(0,0,0)];
         this.PlayerList = [new Player("Player1", this.RoleList[0])];
+        this.RoleList[0].SetOperator(this.PlayerList[this.OpeRoleNum]);
+
+        // AI與AI角色
         for(AINum = 0; AINum < this.AINumber; ++AINum) {
             this.RoleList.push(new Wolf(0,0,0));
             this.AIList.push(new Vega("Vega"+(AINum+1), this.RoleList[AINum+1]));
         }
         RoleListLength = this.RoleList.length;
         AIListLength = this.AIList.length;
-        this.RoleList[0].SetOperator(this.PlayerList[this.OpeRoleNum]);
         for(AINum = 0; AINum < AIListLength; ++AINum) {
             this.RoleList[AINum+1].SetOperator(this.AIList[AINum]);
         }
-        WaitDrawObjects.objects.push(new Exit(0,0,0));
-        WaitDrawObjects.objects.push(new Treasure(0,0,0));
-        for(RoleNum = 0; RoleNum < RoleListLength; ++RoleNum) {
-            WaitDrawObjects.objects.push(this.RoleList[RoleNum]);
-        }
+        // AI用迷宮
         for(AINum = 0; AINum < AIListLength; ++AINum) {
             this.AIMaze.push(MazeCopier(GameScene.maze));
         }
+        // AI資訊初使化
         for(AINum = 0; AINum < AIListLength; ++AINum) {
             this.AIList[AINum].Info_Init(RoleListLength-1);
         }
+        // 角色位置初始化
         ObjectPositionInit(GameScene.maze, this.RoleList);
+
+         // 角色列入繪畫清單
+        for(RoleNum = 0; RoleNum < RoleListLength; ++RoleNum) {
+            WaitDrawObjects.objects.push(this.RoleList[RoleNum]);
+        }
+
+        // 金幣
+        for(i = 0; i < 100; ++i) {
+            // var aGoldCoin = new GoldCoin(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+            // while(maze[aGoldCoin.getZ()][aGoldCoin.getX()][aGoldCoin.getY()].object != "road") {
+            //     aGoldCoin.SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+            // }
+            this.GoldCoinList.push(GoldCoinGenerator(GameScene.maze));
+            for(j = 0; j < this.GoldCoinList.length-1; ++j) {
+                if(IsSamePosition(this.GoldCoinList[this.GoldCoinList.length-1], this.GoldCoinList[j])) {
+                    --i;
+                    this.GoldCoinList.pop();
+                    break;
+                }
+            }
+        }
+
+        // 金幣列入繪畫清單
+        for(i = 0; i < this.GoldCoinList.length; ++i) {
+            WaitDrawObjects.objects.push(this.GoldCoinList[i]);
+        }
+
+        // 迷宮格長設定
         GameScene.SetFixedSL((window.innerHeight*window.devicePixelRatio)/2/5);
         GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(this.RoleList[this.ViewRoleNum].GetViewScope()));
+
+        // 遊戲開始
         this.StartGame();
     },
 
@@ -285,6 +322,9 @@ var Control = {
         this.LastTimeStamp = timestamp;
         GameTime += progress;
 
+        for(i = 0; i <= WaitDrawObjects.objects.length-1; ++i) { 
+            WaitDrawObjects.objects[i].update(progress);
+        }
         for(AINum = 0; AINum < AIListLength; ++AINum) {
             this.AIList[AINum].StrategyThinking();
          }
@@ -415,7 +455,15 @@ var Control = {
         }
         else {
             // console.time('GameScene.UpdateViewScope');
+            // 重繪資訊欄
+            // if(window.devicePixelRatio <= 1.5) {
+                GCCT.fillStyle = "Black";
+                GCCT.fillRect(0,0,250,200);
+            // }
+
             GameScene.UpdateViewScope(this.RoleList[this.ViewRoleNum]);
+
+            // FPS計算
             ++CalFPS;
             TimeElapsed += progress;
             if(TimeElapsed > 0.5) {
@@ -423,15 +471,22 @@ var Control = {
                 CalFPS = 0;
                 TimeElapsed = 0;
             }
-            if(window.devicePixelRatio <= 1.5) {
-                GCCT.fillStyle = "Black";
-                GCCT.fillRect(0,0,210,50);
-            }
+            if(window.innerWidth > window.innerHeight*window.devicePixelRatio) {
+                // 繪製FPS資訊
                 GCCT.strokeStyle = "White";
                 GCCT.textAlign = "left";
                 GCCT.textBaseline = "top";
                 GCCT.lineWidth = 2;            
                 GCCT.strokeText("FPS : " + FPS, 0, 0);
+
+                // 繪製時間資訊
+                minute = (Math.floor(Math.floor(GameTime)/60) < 10) ? ("0" + Math.floor(Math.floor(GameTime)/60)) : (Math.floor(Math.floor(GameTime)/60));
+                second = (Math.floor(GameTime)%60 < 10) ? ("0" + Math.floor(GameTime)%60) : (Math.floor(GameTime)%60);
+                GCCT.strokeText("Time : " + minute + ":" + second, 0, 40);
+
+                // 繪製分數
+                GCCT.strokeText("Score : " + Math.floor(GameTime), 0, 80);
+            }
             // console.timeEnd('GameScene.UpdateViewScope');
             requestAnimationFrame(this.UpdateGameProgress.bind(this));
         }
@@ -458,10 +513,17 @@ var Control = {
     ResetGame : function() {
         this.GameOver = false;
         this.winner = "unknown";
-        for(AINum = 0; AINum < AIListLength; ++AINum) {
-            this.AIMaze.pop();
-        }
-        WaitDrawObjects.objects.splice(0,WaitDrawObjects.objects.length);
+        this.RoleList = [];
+        this.AIList = [];
+        this.AIMaze = [];
+        GameTime = 0;
+        minute = "00";
+        second = "00";
+        CalFPS = 0;
+        FPS = 0;
+        TimeElapsed = 0;
+        WaitDrawObjects.objects = [];
+        // WaitDrawObjects.objects.splice(0,WaitDrawObjects.objects.length);
         AngleOffset = 0;
     }
 }
