@@ -1,4 +1,5 @@
-function Vega(name, role) {
+﻿// 遊戲的簡易AI
+function AI(name, role) {
     this.name = name;
     this.role = role;
     this.Memory_OtherPlayers = [];
@@ -76,7 +77,7 @@ function Vega(name, role) {
         this.RoleZ = this.RoleInitialZ + Math.round(this.RoleRelativeZ);
 
         // 更新玩家資訊記憶
-        for(PlayerNum = 0; PlayerNum < Info.OtherPlayers.length; ++PlayerNum) {
+        for(var PlayerNum = 0; PlayerNum < Info.OtherPlayers.length; ++PlayerNum) {
             this.Memory_OtherPlayers[PlayerNum].Name = Info.OtherPlayers[PlayerNum].Name;
             if(Info.OtherPlayers[PlayerNum].RelativeX != "unknown" && Info.OtherPlayers[PlayerNum].RelativeY != "unknown") {
                 this.Memory_OtherPlayers[PlayerNum].RelativeX = Info.OtherPlayers[PlayerNum].RelativeX + this.RoleRelativeX;
@@ -93,18 +94,18 @@ function Vega(name, role) {
             this.Memory_Maze.unshift([]);	
             ++this.RoleInitialZ;
             ++this.RoleZ;								
-            for(x = 0; x < this.Memory_Maze[1].length; ++x) {
+            for(var x = 0; x < this.Memory_Maze[1].length; ++x) {
                 this.Memory_Maze[0].push([]);
-                for(y = 0; y < this.Memory_Maze[1][x].length; ++y) {
+                for(var y = 0; y < this.Memory_Maze[1][x].length; ++y) {
                      this.Memory_Maze[0][x].push("unknown");
                 }
             }
         }
         while(this.RoleZ >= this.Memory_Maze.length-1) {
             this.Memory_Maze.push([]);									
-            for(x = 0; x < this.Memory_Maze[this.Memory_Maze.length-2].length; ++x) {
+            for(var x = 0; x < this.Memory_Maze[this.Memory_Maze.length-2].length; ++x) {
                 this.Memory_Maze[this.Memory_Maze.length-1].push([]);
-                for(y = 0; y < this.Memory_Maze[this.Memory_Maze.length-2][x].length; ++y) {
+                for(var y = 0; y < this.Memory_Maze[this.Memory_Maze.length-2][x].length; ++y) {
                     this.Memory_Maze[this.Memory_Maze.length-1][x].push("unknown");
                 }
             }
@@ -112,16 +113,16 @@ function Vega(name, role) {
         while(this.RoleX - Info.MazeInfoCenterX < 1) {
             ++this.RoleInitialX;
             ++this.RoleX;
-            for(z = 0; z < this.Memory_Maze.length; ++z) {
+            for(var z = 0; z < this.Memory_Maze.length; ++z) {
                 this.Memory_Maze[z].unshift([]);
-                for(y = 0; y < this.Memory_Maze[z][1].length; ++y) {
+                for(var y = 0; y < this.Memory_Maze[z][1].length; ++y) {
                     this.Memory_Maze[z][0].push("unknown");
                 }
             }
         }
         while(this.RoleY - Info.MazeInfoCenterY < 1) {
-            for(z = 0; z < this.Memory_Maze.length; ++z) {
-                for(x = 0; x < this.Memory_Maze[z].length; ++x) {
+            for(var z = 0; z < this.Memory_Maze.length; ++z) {
+                for(var x = 0; x < this.Memory_Maze[z].length; ++x) {
                     this.Memory_Maze[z][x].unshift("unknown");
                 }
             }
@@ -129,24 +130,24 @@ function Vega(name, role) {
             ++this.RoleY;
         }
         while(this.RoleX + (Info.Maze.length - 1 - Info.MazeInfoCenterX) >= this.Memory_Maze[this.RoleZ].length-1) {
-            for(z = 0; z < this.Memory_Maze.length; ++z) {
+            for(var z = 0; z < this.Memory_Maze.length; ++z) {
                 this.Memory_Maze[z].push([]);
-                for(y = 0; y < this.Memory_Maze[z][this.Memory_Maze[z].length - 2].length; ++y) {
+                for(var y = 0; y < this.Memory_Maze[z][this.Memory_Maze[z].length - 2].length; ++y) {
                     this.Memory_Maze[z][this.Memory_Maze[z].length - 1].push("unknown");
                 }
             }
         }
         while(this.RoleY + (Info.Maze[Info.MazeInfoCenterX].length - 1 - Info.MazeInfoCenterY) >= this.Memory_Maze[this.RoleZ][this.RoleX].length-1) {
-            for(z = 0; z < this.Memory_Maze.length; ++z) {
-                for(x = 0; x < this.Memory_Maze[z].length; ++x) {
+            for(var z = 0; z < this.Memory_Maze.length; ++z) {
+                for(var x = 0; x < this.Memory_Maze[z].length; ++x) {
                     this.Memory_Maze[z][x].push("unknown");
                 }
             }
         }
 
         // 更新迷宮記憶
-        for(x = 0; x < Info.Maze.length; ++x) {
-            for(y = 0; y < Info.Maze[x].length; ++y) {
+        for(var x = 0; x < Info.Maze.length; ++x) {
+            for(var y = 0; y < Info.Maze[x].length; ++y) {
                 if(Info.Maze[x][y] != "unknown") {
                     this.Memory_Maze[this.RoleZ][this.RoleX+x-Info.MazeInfoCenterX][this.RoleY+y-Info.MazeInfoCenterY] = Info.Maze[x][y];
                 }
@@ -180,16 +181,16 @@ function Vega(name, role) {
     };
 
     this.Info_Init = function(RoleNumber) {	
-        for(z = 0; z <= 2; ++z) {	
+        for(var z = 0; z <= 2; ++z) {	
             this.Memory_Maze.push([]);									
-            for(x = 0; x <= 24; ++x) {
+            for(var x = 0; x <= 24; ++x) {
                 this.Memory_Maze[z].push([]);
-                for(y = 0; y <= 24; ++y) {
+                for(var y = 0; y <= 24; ++y) {
                     this.Memory_Maze[z][x].push("unknown");
                 }
             }
         }
-        for(RoleNum = 0; RoleNum < RoleNumber; ++RoleNum) {
+        for(var RoleNum = 0; RoleNum < RoleNumber; ++RoleNum) {
             this.Memory_OtherPlayers.push({Name : "unknown", RelativeX : "unknown", RelativeY : "unknown"});
         }
         this.RoleInitialX = Math.floor(this.Memory_Maze[0].length/2);
@@ -525,7 +526,7 @@ function Vega(name, role) {
                                 {Strategy : "SearchMaze", Value : this.ValueSystem("SearchMaze")},
                                 {Strategy : "ChasePlayer", Value : this.ValueSystem("ChasePlayer")}];
         NextStrategyList.sort(function(a, b){return b.Value-a.Value});
-        for(i = NextStrategyList.length-1; i >= 1; --i) {
+        for(var i = NextStrategyList.length-1; i >= 1; --i) {
             if(NextStrategyList[i].Value < NextStrategyList[0].Value) {
                 NextStrategyList.pop();
             }
@@ -566,7 +567,7 @@ function Vega(name, role) {
 
         // console.log(NextActionList);
         NextActionList.sort(function(a, b){return b.Value-a.Value});
-        for(i = NextActionList.length-1; i >= 1; --i) {
+        for(var i = NextActionList.length-1; i >= 1; --i) {
             if(NextActionList[i].Value < NextActionList[0].Value) {
                 NextActionList.pop();
             }

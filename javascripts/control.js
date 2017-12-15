@@ -1,4 +1,28 @@
 // 所有未知的變數如未特別命名皆為unknown
+
+// 計算遊戲時間
+var GameTime = 0;
+var minute = "00";
+var second = "00";
+
+// 計算每秒幀數
+var CalFPS = 0;
+var FPS = 0;      
+var TimeElapsed = 0;  
+
+// 鍵位定義
+var NoKey = 0;
+var KeyDown = 1;
+var KeyRight = 2;
+var KeyUp = 4;
+var KeyLeft = 8;
+var KeyD = 16
+var KeyF = 32;
+var KeyQ = 64;
+var KeyW = 128;
+var AllKey = KeyDown + KeyRight + KeyUp + KeyLeft + KeyD + KeyF + KeyQ + KeyW;   // Number.MAX_SAFE_INTEGER; (IE不支援QAQ)
+
+// 遊戲流程控制物件
 var Control = {
     state : "GameMenuScene",      
     EventListener1 : function() {},
@@ -159,39 +183,37 @@ var Control = {
         this.RoleList[0].SetOperator(this.PlayerList[this.OpeRoleNum]);
 
         // AI與AI角色
-        for(AINum = 0; AINum < this.AINumber; ++AINum) {
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.RoleList.push(new Wolf(0,0,0));
-            this.AIList.push(new Vega("Vega"+(AINum+1), this.RoleList[AINum+1]));
+            this.AIList.push(new AI("AI"+(AINum+1), this.RoleList[AINum+1]));
         }
-        RoleListLength = this.RoleList.length;
-        AIListLength = this.AIList.length;
-        for(AINum = 0; AINum < AIListLength; ++AINum) {
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.RoleList[AINum+1].SetOperator(this.AIList[AINum]);
         }
         // AI用迷宮
-        for(AINum = 0; AINum < AIListLength; ++AINum) {
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIMaze.push(MazeCopier(GameScene.maze));
         }
         // AI資訊初使化
-        for(AINum = 0; AINum < AIListLength; ++AINum) {
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIList[AINum].Info_Init(RoleListLength-1);
         }
         // 角色位置初始化
         ObjectPositionInit(GameScene.maze, this.RoleList);
 
          // 角色列入繪畫清單
-        for(RoleNum = 0; RoleNum < RoleListLength; ++RoleNum) {
+        for(var RoleNum = 0; RoleNum <this.RoleList.length; ++RoleNum) {
             WaitDrawObjects.objects.push(this.RoleList[RoleNum]);
         }
 
         // 金幣
-        for(i = 0; i < 100; ++i) {
+        for(var i = 0; i < 100; ++i) {
             // var aGoldCoin = new GoldCoin(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
             // while(maze[aGoldCoin.getZ()][aGoldCoin.getX()][aGoldCoin.getY()].object != "road") {
             //     aGoldCoin.SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
             // }
             this.GoldCoinList.push(GoldCoinGenerator(GameScene.maze));
-            for(j = 0; j < this.GoldCoinList.length-1; ++j) {
+            for(var j = 0; j < this.GoldCoinList.length-1; ++j) {
                 if(IsSamePosition(this.GoldCoinList[this.GoldCoinList.length-1], this.GoldCoinList[j])) {
                     --i;
                     this.GoldCoinList.pop();
@@ -201,7 +223,7 @@ var Control = {
         }
 
         // 金幣列入繪畫清單
-        for(i = 0; i < this.GoldCoinList.length; ++i) {
+        for(var i = 0; i < this.GoldCoinList.length; ++i) {
             WaitDrawObjects.objects.push(this.GoldCoinList[i]);
         }
 
@@ -322,18 +344,18 @@ var Control = {
         this.LastTimeStamp = timestamp;
         GameTime += progress;
 
-        for(i = 0; i <= WaitDrawObjects.objects.length-1; ++i) { 
+        for(var i = 0; i <= WaitDrawObjects.objects.length-1; ++i) { 
             WaitDrawObjects.objects[i].update(progress);
         }
-        for(AINum = 0; AINum < AIListLength; ++AINum) {
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIList[AINum].StrategyThinking();
          }
-        for(AINum = 0; AINum < AIListLength; ++AINum) {
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIList[AINum].CollectInfo(GetAIAvailableInfo(this.AIList[AINum].GetRole(), this.RoleList, this.AIMaze[AINum]));
             this.AIList[AINum].ActionThinking();
         }
-        for(RoleNum = 0; RoleNum < RoleListLength; ++RoleNum) {
-            for(ItemNum = 0; ItemNum <= 7; ++ItemNum) {
+        for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
+            for(var ItemNum = 0; ItemNum <= 7; ++ItemNum) {
                 if(this.RoleList[RoleNum].GetItem(ItemNum) != "NoItem") {
                     this.RoleList[RoleNum].GetItem(ItemNum).PassiveUse();
                 }
@@ -415,13 +437,13 @@ var Control = {
             if(this.RoleList[RoleNum].GetIdentity() == "TreasureHunter" && ReachDetermination(this.RoleList[RoleNum], WaitDrawObjects.objects[1]) == true) {
                 WaitDrawObjects.objects[1].SetOwner(this.RoleList[RoleNum]);
             }
-            for(ItemNum = 0; ItemNum < this.ItemList.length; ++ItemNum) {
+            for(var ItemNum = 0; ItemNum < this.ItemList.length; ++ItemNum) {
                 if(ReachDetermination(this.RoleList[RoleNum], this.ItemList[ItemNum]) == true && this.ItemList[ItemNum].GetOwner() == "NoOwner") {
                     this.ItemList[ItemNum].SetOwner(this.RoleList[RoleNum]);
                     this.RoleList[RoleNum].SetItem(this.ItemList[ItemNum]);
                 }
             }
-            for(OtherRoleNum = 0; OtherRoleNum < RoleListLength; ++OtherRoleNum) {
+            for(var OtherRoleNum = 0; OtherRoleNum < this.RoleList.length; ++OtherRoleNum) {
                 if(RoleNum == OtherRoleNum) {
                     continue;
                 }
@@ -439,7 +461,7 @@ var Control = {
         // 心跳音效
         var distance;
         var ShortestDistance = Infinity;
-        for(RoleNum = 1; RoleNum < RoleListLength; ++ RoleNum) {
+        for(var RoleNum = 1; RoleNum < this.RoleList.length; ++ RoleNum) {
             distance = Math.pow(Math.pow(this.RoleList[this.OpeRoleNum].getX() - this.RoleList[RoleNum].getX(), 2) + Math.pow(this.RoleList[this.OpeRoleNum].getY() - this.RoleList[RoleNum].getY(), 2), 0.5);
             if(distance < ShortestDistance && this.RoleList[RoleNum].getZ() == this.RoleList[this.OpeRoleNum].getZ()) {
                 ShortestDistance = distance;
@@ -523,7 +545,6 @@ var Control = {
         FPS = 0;
         TimeElapsed = 0;
         WaitDrawObjects.objects = [];
-        // WaitDrawObjects.objects.splice(0,WaitDrawObjects.objects.length);
         AngleOffset = 0;
     }
 }

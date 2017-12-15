@@ -1,14 +1,3 @@
-var NoKey = 0;
-var KeyDown = 1;
-var KeyRight = 2;
-var KeyUp = 4;
-var KeyLeft = 8;
-var KeyD = 16
-var KeyF = 32;
-var KeyQ = 64;
-var KeyW = 128;
-var AllKey = KeyDown + KeyRight + KeyUp + KeyLeft + KeyD + KeyF + KeyQ + KeyW;   // Number.MAX_SAFE_INTEGER; (IE不支援QAQ)
-
 // 當使用者縮放視窗時呼叫此函式來維持繪製區域
 function resize(){
 	GameCanvas = document.getElementById("GameCanvas");
@@ -70,12 +59,12 @@ function ReachDetermination(objectA, objectB) {
 // 複製迷宮
 function MazeCopier(maze) {
 	var maze2 = [];
-	for(z = 0; z < maze.length; ++z) {
+	for(var z = 0; z < maze.length; ++z) {
 		maze2.push(maze[z].map( function(arr) { return JSON.parse(JSON.stringify(arr)); } ));
 	}
-	for(z = 0; z < maze2.length; ++z) {
-		for(x = 0; x < maze2[z].length; ++x) {
-			for(y = 0; y < maze2[z][x].length; ++y) {
+	for(var z = 0; z < maze2.length; ++z) {
+		for(var x = 0; x < maze2[z].length; ++x) {
+			for(var y = 0; y < maze2[z][x].length; ++y) {
 				maze2[z][x][y].passed = false;
 				maze2[z][x][y].passtimes = 0;
 			}
@@ -86,17 +75,17 @@ function MazeCopier(maze) {
 
 function ThinWallMazeGenerator(dimensionX, dimensionY, dimensionZ) {
 	var maze = [];
-	for(z = 0; z < dimensionZ; ++z) {
+	for(var z = 0; z < dimensionZ; ++z) {
 		maze.push([]);
-		for(x = 0; x < dimensionX; ++x) {
+		for(var x = 0; x < dimensionX; ++x) {
 			maze[z].push([]);
-			for(y = 0; y < dimensionY; ++y) {	
+			for(var y = 0; y < dimensionY; ++y) {	
 				maze[z][x].push({passed : false, top : false, right : false, object : "road"});
 			}
 		}
 	}
 	MazePassageGenerator(maze);
-	for(z = 0; z < dimensionZ; ++z) {
+	for(var z = 0; z < dimensionZ; ++z) {
 		ThinWallMazeGo(maze[z], RandomNum(0, dimensionX-1), RandomNum(0, dimensionY-1) );
 	}
 	console.log(maze);
@@ -209,16 +198,16 @@ function ThinWallMazeGo(maze, x, y) {
 
 function ThinWallMazeToThickWallMazeConverter(ThinWallMaze) {
 	var ThickWallMaze = [];
-	for(z = 0; z < ThinWallMaze.length; ++z) {
+	for(var z = 0; z < ThinWallMaze.length; ++z) {
 		ThickWallMaze.push([]);
 		ThickWallMaze[z].push([]);
-		for(y = 0; y <= 2*ThinWallMaze[z][0].length; ++y) {
+		for(var y = 0; y <= 2*ThinWallMaze[z][0].length; ++y) {
 			ThickWallMaze[z][0].push({passed : false, object : "wall"});
 		}
-		for(x = 0; x < ThinWallMaze[z].length; ++x) {
+		for(var x = 0; x < ThinWallMaze[z].length; ++x) {
 			ThickWallMaze[z].push([]);
 			ThickWallMaze[z].push([]);
-			for(y = 0; y <= ThinWallMaze[z][x].length-1; ++y) {
+			for(var y = 0; y <= ThinWallMaze[z][x].length-1; ++y) {
 				if(ThinWallMaze[z][x][y].top == false) {
 					ThickWallMaze[z][2*x+1].push({passed : false, object : "wall"});
 				}
@@ -243,7 +232,7 @@ function ThinWallMazeToThickWallMazeConverter(ThinWallMaze) {
 				}
 			}
 		}
-		for(x = 1; x <= 2*ThinWallMaze[z].length; ++x) {
+		for(var x = 1; x <= 2*ThinWallMaze[z].length; ++x) {
 			ThickWallMaze[z][x].push({passed : false, object : "wall"});
 		}
 	}
@@ -258,23 +247,23 @@ function MazePassageGenerator(maze) {
 	var position = [];
 	var position2 = [];
 	var check = true;
-	for(z = 1; z < maze.length; ++z) {
+	for(var z = 1; z < maze.length; ++z) {
 		position = position2;
 		position2 = [];
 		number = RandomNum(Math.round(maze[z].length*maze[z][0].length/100), Math.round(maze[z].length*maze[z][0].length/50));
 		// number = 0;
-		for(i = 0; i < number; ++i) {
+		for(var i = 0; i < number; ++i) {
 			do {
 				x = RandomNum(0, maze[z].length-1);
 				y = RandomNum(0, maze[z][x].length-1);
 				check = true;
-				for(j = 0; j < position.length; ++j) {
+				for(var j = 0; j < position.length; ++j) {
 					if( (Math.abs(x - position[j].positionX) + Math.abs(y - position[j].positionY) ) <= 1 ) {
 						check = false;
 						break;
 					}
 				}
-				for(j = 0; j < position2.length; ++j) {
+				for(var j = 0; j < position2.length; ++j) {
 					if( (Math.abs(x - position2[j].positionX) + Math.abs(y - position2[j].positionY) ) <= 1 ) {
 						check = false;
 						break;
@@ -365,9 +354,9 @@ function GetAIAvailableInfo(AIRole, Roles, AIMaze) {
 				MazeInfoCenterY : Math.round(ViewableGrid - offsetY)};
 
 	// 填充角色可視迷宮資訊
-	for(x = -Math.round(ViewableGrid - offsetX); x <= Math.round(ViewableGrid + offsetX); ++x) {
+	for(var x = -Math.round(ViewableGrid - offsetX); x <= Math.round(ViewableGrid + offsetX); ++x) {
 		Info.Maze.push([]);
-		for(y = -Math.round(ViewableGrid - offsetY); y <= Math.round(ViewableGrid + offsetX); ++y) {
+		for(var y = -Math.round(ViewableGrid - offsetY); y <= Math.round(ViewableGrid + offsetX); ++y) {
 			if(IsOutOfMaze(AIMaze[IntZ], IntX + x, IntY + y && Math.abs(Z - IntZ) < 0.1)) {
 				Info.Maze[x + Math.round(ViewableGrid - offsetX)].push("Border");
 			}
@@ -381,7 +370,7 @@ function GetAIAvailableInfo(AIRole, Roles, AIMaze) {
 	}
 
 	// 填充其它可視玩家資訊
-	for(PlayerNum = 0; PlayerNum <= RoleListLength-1; ++PlayerNum) {
+	for(var PlayerNum = 0; PlayerNum < Roles.length; ++PlayerNum) {
 		if(AIRole != Roles[PlayerNum] ){
 			if(AIRole.getZ() == Roles[PlayerNum].getZ() && distance(X, Y, Roles[PlayerNum].getX(), Roles[PlayerNum].getY()) <= ViewScope) {
 				Info.OtherPlayers.push({Name : Roles[PlayerNum].GetOperator().GetName(), 
@@ -520,7 +509,7 @@ function LoadImage() {
 }
 
 function ObjectPositionInit(maze, RoleList) {
-	for(RoleNum = 0; RoleNum <= RoleListLength-1; ++RoleNum) {
+	for(var RoleNum = 0; RoleNum < RoleList.length; ++RoleNum) {
 		while(maze[RoleList[RoleNum].getZ()][RoleList[RoleNum].getX()][RoleList[RoleNum].getY()].object != "road") {
 			RoleList[RoleNum].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
 		}

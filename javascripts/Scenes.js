@@ -1,21 +1,30 @@
+// 遊戲主選單場景繪製物件
 var GameMenuScene = {
-	selection : 0,
+	selection : 0,	// 選擇
+
+	// 選單物件
 	MenuItems : [new MenuItem("開始探險", centerX, GC.height/7 * 3),
 			     new MenuItem("多人連線", centerX, GC.height/7 * 4),
 				 new MenuItem("探險準備", centerX, GC.height/7 * 5),
 				 new MenuItem("設定", 	centerX, GC.height/7 * 6)],	
+
+	// 重建選單物件(更新位置)
 	RecreateMenuItems : function() {
 		this.MenuItems = [new MenuItem("開始探險", centerX, GC.height/7 * 3),
 						  new MenuItem("多人連線", centerX, GC.height/7 * 4),
 						  new MenuItem("探險準備", centerX, GC.height/7 * 5),
 						  new MenuItem("設定", 	 centerX, GC.height/7 * 6)];
 	},
+
+	// 取得選擇
 	GetSelection : function() {
 		return this.selection;
 	},
+
+	// 繪製場景
 	render : function() {
 		// 畫背景
-		GCCT.fillStyle = MyGray;
+		GCCT.fillStyle = "RGB(210,210,210)";
 		GCCT.fillRect(0,0,GC.width,GC.height);
 
 		// 畫標題
@@ -28,15 +37,19 @@ var GameMenuScene = {
 		// 畫選單
 		GCCT.strokeStyle = "Black";
 		GCCT.font = "40px verdana";
-		for(i = 0; i < this.MenuItems.length; ++i) {
+		for(var i = 0; i < this.MenuItems.length; ++i) {
 			GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].x, this.MenuItems[i].y);
 		}	
 		this.OnSelect();
-    },
+	},
+	
+	// 整個Canvas洗白
 	clear : function() {
 		GCCT.fillStyle = "White";
 		GCCT.fillRect(0, 0, GC.width, GC.height);
-    },
+	},
+	
+	// 凸顯選擇的項目
 	OnSelect : function() {
 		var width = 2*GCCT.measureText("開始探險").width;
 		var height = 1.2*GCCT.measureText("開").width;
@@ -47,72 +60,104 @@ var GameMenuScene = {
 		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height);	// 高度有點不對稱，所以乘上1.1
 		GCCT.strokeText(text, centerX, centerY);
 	},
+
+	// 不凸顯選擇的項目
 	UnSelect : function() {
 		var width = 2*GCCT.measureText("開始探險").width+1;
 		var height = 1.2*GCCT.measureText("開").width+1;
 		var text = this.MenuItems[this.selection].name;
 		var centerX = this.MenuItems[this.selection].x;
 		var centerY = this.MenuItems[this.selection].y;
-		GCCT.fillStyle = MyGray;
+		GCCT.fillStyle = "RGB(210,210,210)";
 		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height);	// 高度有點不對稱，所以乘上1.1
 		GCCT.strokeText(text, centerX, centerY);
 	},
-	Down : function() {
-		this.UnSelect();
-		this.selection = (this.selection == this.MenuItems.length-1) ? 0 : (this.selection + 1);
-		this.OnSelect();
-	},
+
+	// 上鍵處理函式
 	Up : function() {
 		this.UnSelect();
 		this.selection = (this.selection == 0) ? (this.MenuItems.length-1) : (this.selection - 1);
 		this.OnSelect();
+	},
+
+	// 下鍵處理函式
+	Down : function() {
+		this.UnSelect();
+		this.selection = (this.selection == this.MenuItems.length-1) ? 0 : (this.selection + 1);
+		this.OnSelect();
 	}
 };
 
+// 遊戲設定場景繪製物件
 var OptionScene = {
-	state : "OptionSelect",
-	selection : 0,
+	state : "OptionSelect",			// 狀態
+	selection : 0,					// 選擇
+
+	// 迷宮的長寬高
 	MazeLength : 25,
 	MazeWidth : 25,
 	MazeHeight : 5,
+
+	// 迷宮可設定的最大長寬高
 	MaxMazeLength : 50,
 	MaxMazeWidth : 50,
 	MaxMazeHeight : 50,
+
+	// 迷宮可設定的最小長寬高
 	MinMazeLength : 10,
 	MinMazeWidth : 10,
 	MinMazeHeight : 1,
+
+	// 取得迷宮的長
 	GetMazeLength : function() {
 		return this.MazeLength;
 	},
+
+	// 取得迷宮的寬
 	GetMazeWidth : function() {
 		return this.MazeWidth;
 	},
+
+	// 取得迷宮的高
 	GetMazeHeight : function() {
 		return this.MazeHeight;
 	},
+
+	// 選單物件
 	MenuItems : [new MenuItem("迷宮長度 : " + this.MazeLength, centerX, GC.height*3/7),
 				 new MenuItem("迷宮寬度 : " + this.MazeWidth, centerX, GC.height*3.75/7),
 				 new MenuItem("迷宮高度 : " + ((this.MazeHeight >= 10) ? "" : "0") + this.MazeHeight, centerX, GC.height*4.5/7),
 				 new MenuItem("返回", centerX, GC.height*6/7)],
+
+	// 重建選單物件(更新數值與位置)
 	RecreateMenuItems : function() {
 		this.MenuItems = [new MenuItem("迷宮長度 : " + this.MazeLength, centerX, GC.height*3/7),
 			 			  new MenuItem("迷宮寬度 : " + this.MazeWidth, centerX, GC.height*3.75/7),
 						  new MenuItem("迷宮高度 : " + ((this.MazeHeight >= 10) ? "" : "0") + this.MazeHeight, centerX, GC.height*4.5/7),
 						  new MenuItem("返回", centerX, GC.height*6/7)];
 	},
+
+	// 取得狀態
 	GetState : function() {
 		return this.state;
 	},
+
+	// 取得選擇
 	GetSelection : function() {
 		return this.selection;
 	},
+
+	// 整個Canvas洗白
 	clear : function() {
 		GCCT.fillStyle = "White";
 		GCCT.fillRect(0, 0, GC.width, GC.height);
 	},
+
+	// 繪製場景
 	render : function() {
+
 		// 畫背景
-		GCCT.fillStyle = MyGray;
+		GCCT.fillStyle = "RGB(210,210,210)";
 		GCCT.fillRect(0,0,GC.width,GC.height);
 
 		// 畫標題
@@ -125,7 +170,7 @@ var OptionScene = {
 		// 畫選單
 		GCCT.strokeStyle = "Black";
 		GCCT.font = "40px verdana";
-		for(i = 0; i < this.MenuItems.length; ++i) {
+		for(var i = 0; i < this.MenuItems.length; ++i) {
 			GCCT.strokeText(this.MenuItems[i].name, this.MenuItems[i].x, this.MenuItems[i].y);
 		}
 		if(this.state == "OptionSelect") {
@@ -135,6 +180,8 @@ var OptionScene = {
 			this.OnMazeValueSelect();
 		}
 	},
+
+	// 凸顯選擇的項目
 	OnSelect : function() {
 		this.state = "OptionSelect";
 		var width = 2*GCCT.measureText("迷宮長度 : 25").width;
@@ -146,16 +193,20 @@ var OptionScene = {
 		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height); 	// 高度有點不對稱，所以乘上1.1
 		GCCT.strokeText(text, centerX, centerY);
 	},
+
+	// 不凸顯選擇的項目
 	UnSelect : function() {
 		var width = 2*GCCT.measureText("迷宮長度 : 25").width+1;
 		var height = 1.2*GCCT.measureText("迷").width+1;
 		var text = this.MenuItems[this.selection].name;
 		var centerX = this.MenuItems[this.selection].x;
 		var centerY = this.MenuItems[this.selection].y;
-		GCCT.fillStyle = MyGray;
+		GCCT.fillStyle = "RGB(210,210,210)";
 		GCCT.fillRect(centerX - width/2, centerY - height/2, width, 1.1*height); 	// 高度有點不對稱，所以乘上1.1
 		GCCT.strokeText(text, centerX, centerY);
 	},
+
+	// 凸顯選擇的值
 	OnMazeValueSelect : function() {
 		this.state = "MazeValueSetting";
 		var width = 1.5*GCCT.measureText("25").width;
@@ -168,6 +219,8 @@ var OptionScene = {
 		GCCT.fillRect(centerX + offsetX - width/2, centerY - height/2, width, 1.1*height);
 		GCCT.strokeText(text, centerX, centerY);
 	},
+
+	// 左鍵處理函式
 	Left : function() {
 		if(this.state != "MazeValueSetting") {
 			return;
@@ -187,6 +240,8 @@ var OptionScene = {
 		this.UnSelect();
 		this.OnMazeValueSelect();
 	},
+
+	// 上鍵處理函式
 	Up : function() {
 		if(this.state == "OptionSelect") {
 			this.UnSelect();
@@ -209,6 +264,8 @@ var OptionScene = {
 		this.UnSelect();
 		this.OnMazeValueSelect();
 	},
+
+	// 右鍵處理函式
 	Right : function() {
 		if(this.state != "MazeValueSetting") {
 			return;
@@ -228,6 +285,8 @@ var OptionScene = {
 		this.UnSelect();
 		this.OnMazeValueSelect();
 	},
+
+	// 下鍵處理函式
 	Down : function() {
 		if(this.state == "OptionSelect") {
 			this.UnSelect();
@@ -252,22 +311,25 @@ var OptionScene = {
 	}
 };
 
+// 遊戲場景繪製物件
 var GameScene = { 	
-	maze : ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(10,10,5)),
-	SL : 120, 																								// SideLength
-	SLPlus : 121,
-	HalfSL : 60,
-	FixedSL : 120,
-	HalfFixedSL : 60,
-	SkillGrid1X : innerWidth - 3*this.HalfFixSL,
-	SkillGrid2X : innerWidth - this.HalfFixSL,
-	SkillGridY : innerHeight - this.HalfFixSL,
-	SkillCDLoopRadius : 1.2*this.HalfFixSL,
-	CenterGridLeftTopX : centerX - this.HalfSL,
-	CenterGridLeftTopY : centerY - this.HalfSL,
-	ViewScope : "unknown",
-	ChangeItemAnimationRequest : false,
-	ItemChangeDirection :　"unknown",
+	maze : ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(10,10,5)),	// 遊戲迷宮
+	SL : 120, 						// SideLength, 遊戲一格的邊長, 隨viewscope改變
+	SLPlus : this.SL+1,				// SideLength+1		
+	HalfSL : this.SL/2,				// SideLength/2
+	FixedSL : 120,					// 不隨viewscope改變的固定邊長
+	HalfFixedSL : 60,				// 固定邊長/2
+	SkillGrid1X : innerWidth - 3*this.HalfFixSL,	// 技能格1的x座標
+	SkillGrid2X : innerWidth - this.HalfFixSL,		// 技能格2的x座標
+	SkillGridY : innerHeight - this.HalfFixSL,		// 技能格的y座標
+	SkillCDLoopRadius : 1.2*this.HalfFixSL,			// 技能CD環的半徑
+	CenterGridLeftTopX : centerX - this.HalfSL,		// Canvas中心格的左上角x座標
+	CenterGridLeftTopY : centerY - this.HalfSL,		// Canvas中心格的左上角y座標
+	ViewScope : "unknown",							// 可視範圍
+	ChangeItemAnimationRequest : false,				// 動畫開關
+	ItemChangeDirection :　"unknown",			   // 物件選擇旋轉方向
+
+	// 重設SL
 	SetSL : function(ArgSL) {
 		this.SL = ArgSL;
 		this.SLPlus = this.SL + 1;
@@ -275,6 +337,8 @@ var GameScene = {
 		this.CenterGridLeftTopX = centerX - this.HalfSL;
 		this.CenterGridLeftTopY = centerY - this.HalfSL;
 	},
+
+	// 重設固定邊長
 	SetFixedSL : function(ArgSL) {
 		this.FixedSL = ArgSL;
 		this.HalfFixedSL = this.FixedSL/2;
@@ -283,18 +347,24 @@ var GameScene = {
 		this.SkillGridY = innerHeight - this.HalfFixedSL;
 		this.SkillCDLoopRadius = 1.2*this.HalfFixedSL;
 	},
+
+	// 更新迷宮
 	UpdateMaze : function(length, width, height) {
 		this.maze = ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(length, width, height));
 	},
+
+	// 取得迷宮
 	GetMaze : function() {
 		return this.maze;
 	},
 
+	// 整個Canvas洗黒
 	AllBlack : function() {
 		GCCT.fillStyle = "Black";
 		GCCT.fillRect(0,0,GC.width,GC.height);
 	},
 
+	// 繪製角色的可視畫面
 	UpdateViewScope : function(role) {
 		var RoleFloorX = Math.floor(role.getX());
 		var RoleFloorY = Math.floor(role.getY());
@@ -325,8 +395,8 @@ var GameScene = {
 		GCCT.fill();
 
 		// 地圖繪製
-		for(x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
-			for(y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
+			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
 				if(RoleFloorY + y == -1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1) {
 					GCCT.drawImage(OutOfMazeWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
@@ -382,11 +452,12 @@ var GameScene = {
 				}
 			}
 		}
+
 		// 地圖上物件繪製
-		for(i = 0; i <= WaitDrawObjects.objects.length-1; ++i) {
+		for(var i = 0; i < WaitDrawObjects.objects.length; ++i) {
 			GCCT.save();
 			WaitDrawObjects.objects[i].DrawingSetting();
-			if(Math.round(WaitDrawObjects.objects[i].getZ()) == RoleIntZ && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= RoleViewScope) {
+			if(Math.round(WaitDrawObjects.objects[i].getZ()) == WaitDrawObjects.objects[i].getZ() && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= RoleViewScope) {
 				GCCT.drawImage(WaitDrawObjects.objects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects.objects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects.objects[i].getY() - role.getY()), this.SL, this.SL);
 			}
 			GCCT.restore();
@@ -403,8 +474,8 @@ var GameScene = {
 
 		// 蓋過地圖上物件的牆繪製
 		GCCT.save();
-		for(x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
-			for(y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
+			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
 				if(RoleFloorY + y >= 0 && RoleFloorY + y <= this.maze[RoleIntZ][RoleFloorX].length - 1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1 && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object != "wall" && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object == "wall") {
 					GCCT.drawImage(MazeFloorWall,this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
 				}
@@ -506,7 +577,7 @@ var GameScene = {
 		GCCT.drawImage(role.GetSkill2Image(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
 
 		// 玩家擁有物品繪製
-		for(i = -2; i <= 5; ++i) {
+		for(var i = -2; i <= 5; ++i) {
 			if(role.GetItem(i+2) != "NoItem") {
 				GCCT.drawImage(role.GetItem(i+2).GetImage(), this.CenterGridLeftTopX + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)),this.CenterGridLeftTopY + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
 			}
@@ -514,7 +585,7 @@ var GameScene = {
 
 		// 物品環繪製
 		GCCT.save();
-		for(i = -2; i <= 5; ++i) {
+		for(var i = -2; i <= 5; ++i) {
 			if(i == -2) {
 				GCCT.globalAlpha = 1;
 			}

@@ -1,10 +1,9 @@
-var GC = document.getElementById("GameCanvas");								
+﻿var GC = document.getElementById("GameCanvas");								
 var GCCT = GC.getContext("2d");
 GCCT.lineWidth = 2;
 GCCT.font = "40px verdana";
 var centerX = GC.width/2;
 var centerY = GC.height/2;
-var RefreshFrequency = 60;
 var BorderTolerance = 0.2;      		// 需>=最高移動速度/60
 var DoublePI = 2*Math.PI;
 var offset = 0.000001;
@@ -37,7 +36,7 @@ var wolf = new Image();
 var WaitDrawObjects = {
 	objects : [],
 	check : function() {
-		for(i = 0; i < this.objects.length; ++i) {
+		for(var i = 0; i < this.objects.length; ++i) {
 			if(this.objects[i].state == "vanish") {
 				this.objects.splice(i, 1);
 			}
@@ -206,7 +205,7 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	};
 	this.SetItem = function(item) {
 		var j = 0;
-		for(i = 0; i <= 7; ++i) {
+		for(var i = 0; i <= 7; ++i) {
 			if(items[this.GetItemSelection() + j] == "NoItem") {
 				items[this.GetItemSelection() + j] = item;
 				break;
