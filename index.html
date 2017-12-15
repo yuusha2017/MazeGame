@@ -1,35 +1,34 @@
 ﻿<!-- 遊戲 : Unknown Maze
 	  音效素材來源 : 心跳聲 : Sound Jay https://www.soundjay.com/index.html
  -->
-<!DOCTYPE html>
-<html>
-<head>
-		<meta charset="UTF-8"/>
-		<meta name="description" content="Hide-and-seek in maze."/>
-		<meta name="keywords" content="free, game, play, fun, maze, Hide-and-seek"/>
-		<meta name="author" content="Hao Chun"/>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-		<link rel="stylesheet" type="text/css" href="stylesheets\maze.css"/>
-		<link rel="shortcut icon" type="image/png" href="images\favicon.png"/>
-		<title>Unknown Maze</title>
-</head>
-<body onload="start()" onresize="resize()">
-	<canvas id="GameCanvas"></canvas>
-
-<script>
-	document.getElementById("GameCanvas").width = window.innerWidth;
-	document.getElementById("GameCanvas").height = window.innerHeight;
-</script>
-<script src="javascripts\global.js"></script>
-<script src="javascripts\control.js"></script>
-<script src="javascripts\FunctionResource.js"></script>
-<script src="javascripts\DrawingResource.js"></script>
-<script src="javascripts\Scenes.js"></script>
-<script src="javascripts\AI.js"></script>
-<script>
-	function start(){
-		Control.start();
-	}
-</script>
-</body>
-</html>
+ <!DOCTYPE html>
+ <html>
+ <head>
+		 <meta charset="UTF-8"/>
+		 <meta name="description" content="Hide-and-seek in maze."/>
+		 <meta name="keywords" content="free, game, play, fun, maze, Hide-and-seek"/>
+		 <meta name="author" content="Hao Chun"/>
+		 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		 <link rel="stylesheet" type="text/css" href="stylesheets\maze.css"/>
+		 <link rel="shortcut icon" type="image/png" href="images\favicon.png"/>
+		 <title>Unknown Maze</title>
+ </head>
+ <body onload="start()" onresize="resize()">
+	 <canvas id="GameCanvas"></canvas>
+ 
+ <script>
+	 document.getElementById("GameCanvas").width = window.innerWidth;
+	 document.getElementById("GameCanvas").height = window.innerHeight;
+ </script>
+ <script src="javascripts\control.js"></script>
+ <script src="javascripts\FunctionResource.js"></script>
+ <script src="javascripts\DrawingResource.js"></script>
+ <script src="javascripts\Scenes.js"></script>
+ <script src="javascripts\AI.js"></script>
+ <script>
+	 function start(){
+		 Control.start();
+	 }
+ </script>
+ </body>
+ </html>
