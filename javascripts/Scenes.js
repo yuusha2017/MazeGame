@@ -454,15 +454,14 @@ var GameScene = {
 		}
 
 		// 地圖上物件繪製
-		for(var i = 0; i < WaitDrawObjects.objects.length; ++i) {
+		for(var i = 0; i < WaitDrawObjects.length; ++i) {
 			GCCT.save();
-			WaitDrawObjects.objects[i].DrawingSetting();
-			if(Math.round(WaitDrawObjects.objects[i].getZ()) == WaitDrawObjects.objects[i].getZ() && Math.abs(WaitDrawObjects.objects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects.objects[i].getY() - role.getY()) <= RoleViewScope) {
-				GCCT.drawImage(WaitDrawObjects.objects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects.objects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects.objects[i].getY() - role.getY()), this.SL, this.SL);
+			WaitDrawObjects[i].DrawingSetting();
+			if(WaitDrawObjects[i].getZ() == Math.round(role.getZ()) && Math.abs(WaitDrawObjects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects[i].getY() - role.getY()) <= RoleViewScope) {
+				GCCT.drawImage(WaitDrawObjects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects[i].getY() - role.getY()), this.SL, this.SL);
 			}
 			GCCT.restore();
 		}
-		WaitDrawObjects.check();
 
 		// 無論是否隱形自己至少看的到自己
 		if(role.GetState() == "invisible") {

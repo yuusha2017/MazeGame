@@ -30,16 +30,19 @@ var Control = {
     GameOver : false,
     winner : "unknown",
     RoleList : [],
+    HunterList : [],
+    DefenderList : [],
     PlayerList : [],
     AIMaze : [],
     AIList : [],
-    ItemList : [],
+    ItemMap : [],
+    exit : {},
+    treasure : {},
     audio : document.createElement("audio"),
     LastTimeStamp : 0,
-    AINumber : 1,
+    AINumber : 0,
     ViewRoleNum : 0,                    // 觀賞哪個角色視角
     OpeRoleNum : 0,                     // 操作哪個角色
-    GoldCoinList : [],
 
     start : function() {
         this.LoadGameMenuScene ();
@@ -173,58 +176,100 @@ var Control = {
         this.state = "GameScene";
         this.transition();			// temp
 
+        // 初始化物品圖
+        for(var z = 0; z < GameScene.maze.length; ++z) {
+            this.ItemMap.push([]);
+            for(var x = 0; x < GameScene.maze[0].length; ++x) {
+                this.ItemMap[z].push([]);
+                for(var y = 0; y < GameScene.maze[0][0].length; ++y) {
+                    this.ItemMap[z][x].push("NoItem");
+                }
+            }
+        }
+
         // 出口與寶藏列入繪畫清單
-        WaitDrawObjects.objects.push(new Exit(0,0,0));
-        WaitDrawObjects.objects.push(new Treasure(0,0,0));
+        this.exit = new Exit(1,1,0);
+        this.treasure = new Treasure(1,1,0);
+        WaitDrawObjects.push(this.exit);
+        WaitDrawObjects.push(this.treasure);
 
         // 玩家與玩家角色
-        this.RoleList = [new Wolf(0,0,0)];
+        this.RoleList = [new Sheep(1,1,0)];
         this.PlayerList = [new Player("Player1", this.RoleList[0])];
         this.RoleList[0].SetOperator(this.PlayerList[this.OpeRoleNum]);
 
         // AI與AI角色
-        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
-            this.RoleList.push(new Wolf(0,0,0));
+        for(var AINum = 0; AINum < this.AINumber; ++AINum) {
+            this.RoleList.push(new Wolf(1,1,0));
             this.AIList.push(new AI("AI"+(AINum+1), this.RoleList[AINum+1]));
         }
         for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.RoleList[AINum+1].SetOperator(this.AIList[AINum]);
         }
+        // 進行角色分類
+        for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
+            if(this.RoleList[RoleNum].GetIdentity() == "TreasureHunter") {
+                this.HunterList.push(this.RoleList[RoleNum]);
+            }
+            else {
+                this.DefenderList.push(this.RoleList[RoleNum]);
+            }
+        }
         // AI用迷宮
         for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIMaze.push(MazeCopier(GameScene.maze));
         }
-        // AI資訊初使化
+        // AI資訊初始化
         for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
-            this.AIList[AINum].Info_Init(RoleListLength-1);
+            this.AIList[AINum].Info_Init(this.RoleList.length-1);
         }
         // 角色位置初始化
-        ObjectPositionInit(GameScene.maze, this.RoleList);
-
-         // 角色列入繪畫清單
-        for(var RoleNum = 0; RoleNum <this.RoleList.length; ++RoleNum) {
-            WaitDrawObjects.objects.push(this.RoleList[RoleNum]);
-        }
-
-        // 金幣
-        for(var i = 0; i < 100; ++i) {
-            // var aGoldCoin = new GoldCoin(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-            // while(maze[aGoldCoin.getZ()][aGoldCoin.getX()][aGoldCoin.getY()].object != "road") {
-            //     aGoldCoin.SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-            // }
-            this.GoldCoinList.push(GoldCoinGenerator(GameScene.maze));
-            for(var j = 0; j < this.GoldCoinList.length-1; ++j) {
-                if(IsSamePosition(this.GoldCoinList[this.GoldCoinList.length-1], this.GoldCoinList[j])) {
-                    --i;
-                    this.GoldCoinList.pop();
-                    break;
-                }
+        for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
+            var position = PositionGenerator(GameScene.maze, WaitDrawObjects, 10);
+            if(!position) {
+                break;
             }
+            this.RoleList[RoleNum].SetPosition(position.x, position.y, position.z);
+            this.RoleList[RoleNum].SetPrePosition(position.x, position.y, position.z);
+        }
+        this.exit.SetPosition(this.RoleList[0].getX(), this.RoleList[0].getY(), this.RoleList[0].getZ());
+        var position = PositionGenerator(GameScene.maze, this.RoleList.slice(0,1), 10);
+        this.treasure.SetPosition(position.x, position.y, position.z);
+        this.ItemMap[position.z][position.x][position.y] = this.treasure;
+
+        // 角色列入繪畫清單
+        for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
+            WaitDrawObjects.push(this.RoleList[RoleNum]);
+        }
+       
+        // 金幣
+        for(var i = 0; i < 10; ++i) {
+            var position = PositionGenerator(GameScene.maze, WaitDrawObjects, 3);
+            if(!position) {
+                break;
+            }
+            this.ItemMap[position.z][position.x][position.y] = new GoldCoin(position.x, position.y, position.z);
+            WaitDrawObjects.push(this.ItemMap[position.z][position.x][position.y]);
         }
 
-        // 金幣列入繪畫清單
-        for(var i = 0; i < this.GoldCoinList.length; ++i) {
-            WaitDrawObjects.objects.push(this.GoldCoinList[i]);
+        // 銀幣
+        for(var i = 0; i < 50; ++i) {
+            var position = PositionGenerator(GameScene.maze, WaitDrawObjects, 3);
+            if(!position) {
+                break;
+            }
+            this.ItemMap[position.z][position.x][position.y] = new SilverCoin(position.x, position.y, position.z);
+            WaitDrawObjects.push(this.ItemMap[position.z][position.x][position.y]);
+        }
+
+        // 銅幣
+        for(var i = 0; i < 100; ++i) {
+            var position = PositionGenerator(GameScene.maze, WaitDrawObjects, 3);
+            if(!position) {
+                break;
+            }
+            this.ItemMap[position.z][position.x][position.y] = new BronzeCoin(position.x, position.y, position.z);
+            WaitDrawObjects.push(this.ItemMap[position.z][position.x][position.y]);
         }
 
         // 迷宮格長設定
@@ -343,9 +388,8 @@ var Control = {
         var progress = (timestamp - this.LastTimeStamp)/1000;
         this.LastTimeStamp = timestamp;
         GameTime += progress;
-
-        for(var i = 0; i <= WaitDrawObjects.objects.length-1; ++i) { 
-            WaitDrawObjects.objects[i].update(progress);
+        for(var i = 0; i <= WaitDrawObjects.length-1; ++i) { 
+            WaitDrawObjects[i].update(progress);
         }
         for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIList[AINum].StrategyThinking();
@@ -434,29 +478,34 @@ var Control = {
                 }
             }
 
-            if(this.RoleList[RoleNum].GetIdentity() == "TreasureHunter" && ReachDetermination(this.RoleList[RoleNum], WaitDrawObjects.objects[1]) == true) {
-                WaitDrawObjects.objects[1].SetOwner(this.RoleList[RoleNum]);
+            // 物品取得
+            if(this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())] != "NoItem") {
+                this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())].contact(this.RoleList[RoleNum]);
+                this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())] = "NoItem"; 
             }
-            for(var ItemNum = 0; ItemNum < this.ItemList.length; ++ItemNum) {
-                if(ReachDetermination(this.RoleList[RoleNum], this.ItemList[ItemNum]) == true && this.ItemList[ItemNum].GetOwner() == "NoOwner") {
-                    this.ItemList[ItemNum].SetOwner(this.RoleList[RoleNum]);
-                    this.RoleList[RoleNum].SetItem(this.ItemList[ItemNum]);
+            // for(var ItemNum = 0; ItemNum < this.ItemList.length; ++ItemNum) {
+            //     if(ReachDetermination(this.RoleList[RoleNum], this.ItemList[ItemNum]) == true && this.ItemList[ItemNum].GetOwner() == "NoOwner") {
+            //         this.ItemList[ItemNum].SetOwner(this.RoleList[RoleNum]);
+            //         this.RoleList[RoleNum].SetItem(this.ItemList[ItemNum]);
+            //     }
+            // }
+        }
+        // 逃出判定
+        if(this.treasure.GetOwner() != "NoOwner" && ReachDetermination(this.treasure.GetOwner(), this.exit) == true) {
+            this.winner = "TreasureHunter";
+            this.GameOver = true;
+        }
+        // 捕捉判定
+        for(var HunterNum = 0; HunterNum < this.HunterList.length; ++HunterNum) {
+            for(var DefenderNum = 0; DefenderNum < this.DefenderList.length; ++DefenderNum) {
+                if(ReachDetermination(this.HunterList[HunterNum], this.DefenderList[DefenderNum]) == true) {
+                    this.HunterList[HunterNum].SetState("vanish");
                 }
-            }
-            for(var OtherRoleNum = 0; OtherRoleNum < this.RoleList.length; ++OtherRoleNum) {
-                if(RoleNum == OtherRoleNum) {
-                    continue;
-                }
-                if(this.RoleList[RoleNum].GetIdentity() != this.RoleList[OtherRoleNum].GetIdentity() 
-                && ReachDetermination(this.RoleList[RoleNum], this.RoleList[OtherRoleNum]) == true) {
-                    this.GameOver = true;
-                }
-            }
-            if(this.RoleList[RoleNum] == WaitDrawObjects.objects[1].GetOwner() && ReachDetermination(this.RoleList[RoleNum], WaitDrawObjects.objects[0]) == true) {
-                this.winner = "TreasureHunter";
-                this.GameOver = true;
             }
         }
+        check(WaitDrawObjects);
+        check(this.RoleList);
+        check(this.HunterList);
 
         // 心跳音效
         var distance;
@@ -507,7 +556,7 @@ var Control = {
                 GCCT.strokeText("Time : " + minute + ":" + second, 0, 40);
 
                 // 繪製分數
-                GCCT.strokeText("Score : " + Math.floor(GameTime), 0, 80);
+                GCCT.strokeText("Score : " + (10*this.RoleList[this.ViewRoleNum].GetGoldCoin()+5*this.RoleList[this.ViewRoleNum].GetSilverCoin()+this.RoleList[this.ViewRoleNum].GetBronzeCoin()), 0, 80);
             }
             // console.timeEnd('GameScene.UpdateViewScope');
             requestAnimationFrame(this.UpdateGameProgress.bind(this));
@@ -536,15 +585,22 @@ var Control = {
         this.GameOver = false;
         this.winner = "unknown";
         this.RoleList = [];
+        this.HunterList = [];
+        this.DefenderList = [];
+        this.ItemMap = [];
         this.AIList = [];
         this.AIMaze = [];
+        this.exit = {};
+        this.treasure = {};
+        this.LastTimeStamp = 0;
+        this.ViewRoleNum = 0;               
         GameTime = 0;
         minute = "00";
         second = "00";
         CalFPS = 0;
         FPS = 0;
         TimeElapsed = 0;
-        WaitDrawObjects.objects = [];
+        WaitDrawObjects = [];
         AngleOffset = 0;
     }
 }

@@ -88,7 +88,7 @@ function ThinWallMazeGenerator(dimensionX, dimensionY, dimensionZ) {
 	for(var z = 0; z < dimensionZ; ++z) {
 		ThinWallMazeGo(maze[z], RandomNum(0, dimensionX-1), RandomNum(0, dimensionY-1) );
 	}
-	console.log(maze);
+	// console.log(maze);
 	return maze;
 }
 
@@ -506,20 +506,24 @@ function LoadImage() {
 	sheep.src = "images\\sheep.png";
 	wolf.src = "images\\wolf.png";
 	goldcoin.src = "images\\GoldCoin.png";
+	silvercoin.src = "images\\SilverCoin.png";
+	bronzecoin.src = "images\\BronzeCoin.png";
 }
 
-function ObjectPositionInit(maze, RoleList) {
-	for(var RoleNum = 0; RoleNum < RoleList.length; ++RoleNum) {
-		while(maze[RoleList[RoleNum].getZ()][RoleList[RoleNum].getX()][RoleList[RoleNum].getY()].object != "road") {
-			RoleList[RoleNum].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-		}
-		RoleList[RoleNum].SetPrePosition(RoleList[RoleNum].getX(), RoleList[RoleNum].getY(), RoleList[RoleNum].getZ());
-	}
-	WaitDrawObjects.objects[0].SetPosition(RoleList[0].getX(), RoleList[0].getY(), RoleList[0].getZ());
-	do{
-		WaitDrawObjects.objects[1].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-	}while(maze[WaitDrawObjects.objects[1].getZ()][WaitDrawObjects.objects[1].getX()][WaitDrawObjects.objects[1].getY()].object != "road") 
-}
+// // 出口與寶藏與角色的位置初始化
+// function ObjectPositionInit(maze, RoleList) {
+// 	for(var RoleNum = 0; RoleNum < RoleList.length; ++RoleNum) {
+// 		PositionGenerator(maze, )
+// 		while(maze[RoleList[RoleNum].getZ()][RoleList[RoleNum].getX()][RoleList[RoleNum].getY()].object != "road") {
+// 			RoleList[RoleNum].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+// 		}
+// 		RoleList[RoleNum].SetPrePosition(RoleList[RoleNum].getX(), RoleList[RoleNum].getY(), RoleList[RoleNum].getZ());
+// 	}
+// 	WaitDrawObjects[0].SetPosition(RoleList[0].getX(), RoleList[0].getY(), RoleList[0].getZ());
+// 	do{
+// 		WaitDrawObjects[1].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+// 	}while(maze[WaitDrawObjects[1].getZ()][WaitDrawObjects[1].getX()][WaitDrawObjects[1].getY()].object != "road") 
+// }
 
 // 給定一位置與一迷宮平面, 判斷該位置是否在迷宮之外
 function IsOutOfMaze(maze, x, y) {
@@ -531,18 +535,42 @@ function IsOutOfMaze(maze, x, y) {
 	}
 }
 
+// 回傳距離(二維)
 function distance(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
 
-function IsSamePosition(object1, object2) {
-	return (object1.getX() == object2.getX() && object1.getY() == object2.getY() && object1.getZ() == object2.getZ()) ? true : false;
+// 回傳距離(三維)
+function distance3d(x1, y1, z1, x2, y2, z2) {
+	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2) + Math.pow(z1 - z2, 2));
 }
 
-function GoldCoinGenerator(maze) {
-	var aGoldCoin = new GoldCoin(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-	while(maze[aGoldCoin.getZ()][aGoldCoin.getX()][aGoldCoin.getY()].object != "road") {
-		aGoldCoin.SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
+// 回傳一位置，該位置必須在ObjectList內所有物件位置的半徑之外，並且在道路上
+function PositionGenerator(maze, ObjectList, radius) {
+	var i = -1;
+	var times = 0;
+	while(i != ObjectList.length) {
+		if(++times > 1000) {
+			return false;
+		}
+		var position = {x : RandomNum(1, maze[0].length-2), y : RandomNum(1, maze[0][0].length-2), z : RandomNum(0, maze.length-1)};
+		while(maze[position.z][position.x][position.y].object != "road") {
+			position = {x : RandomNum(1, maze[0].length-2), y : RandomNum(1, maze[0][0].length-2), z : RandomNum(0, maze.length-1)};
+		}
+		for(i = 0; i < ObjectList.length; ++i) {
+			if(distance3d(position.x, position.y, position.z, ObjectList[i].getX(), ObjectList[i].getY(), ObjectList[i].getZ()) <= radius) {
+				break;
+			}
+		}
 	}
-	return aGoldCoin;
+	return position;
+}
+
+// 檢查物件清單，需要時刪除元素
+function check(objects) {
+	for(var i = 0; i < objects.length; ++i) {
+		if(objects[i].GetState() == "vanish") {
+			objects.splice(i, 1);
+		}
+	}
 }

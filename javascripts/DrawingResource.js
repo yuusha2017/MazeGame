@@ -1,4 +1,4 @@
-﻿var GC = document.getElementById("GameCanvas");								
+var GC = document.getElementById("GameCanvas");								
 var GCCT = GC.getContext("2d");
 GCCT.lineWidth = 2;
 GCCT.font = "40px verdana";
@@ -27,29 +27,23 @@ var MazeWallRightPassageUp = new Image();
 var MazeWallDownPassageUp = new Image();
 var MazeWallLeftPassageUp = new Image();
 var goldcoin = new Image();
+var silvercoin = new Image();
+var bronzecoin = new Image();
 var treasure = new Image();
 var exit = new Image();
 var ItemBorder = new Image();
 var flash = new Image();
 var sheep = new Image();
 var wolf = new Image();
-var WaitDrawObjects = {
-	objects : [],
-	check : function() {
-		for(var i = 0; i < this.objects.length; ++i) {
-			if(this.objects[i].state == "vanish") {
-				this.objects.splice(i, 1);
-			}
-		}
-	}
-}
+var WaitDrawObjects = [];
 
 
 /* 各個物件皆有update用來更新一些數值，以及DrawingSetting來控制物件的繪畫表現，
 	狀態有"visible"、"invisible"、"vanish"三種，visible需繪製，invisible不需繪製，vanish需移除。
-	以BaseObj為基本結構延伸出角色, 道具等，為使物件之變數private無法將method放入prototype 。每個角色皆有
-	Skill1、Skill2技能(function), 需在各自的結構特別定義, 每個道具皆有被動功能(PassiveUse function)與主動功能(ActiveUse function)
+	以BaseObj為基本結構延伸出角色, 物品等，為使物件之變數private無法將method放入prototype 。每個角色皆有
+	Skill1、Skill2技能(function), 需在各自的結構特別定義, 每個物品皆有被動功能(PassiveUse function)與主動功能(ActiveUse function)
 	 , 需在各自的結構特別定義, 如未特別定義則無效果。*/
+// 12/16更新 : 物品與幣結構有contact函式來為角色的接觸做出反應
 
 // 基本物件結構
 function BaseObj(argX, argY, argZ, ArgImg) {
@@ -119,6 +113,9 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	var Skill1Image = ArgSkill1Image;
 	var Skill2Image = ArgSkill2Image;
 	var items = ["NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem"];
+	var GoldCoin = 0;
+	var SilverCoin = 0;
+	var BronzeCoin = 0;
 	var ItemSelection = 0;
 	var direction = "down";		
 	var identity = ArgIdentity;
@@ -172,6 +169,15 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	};
 	this.GetIdentity = function() {
 		return identity;
+	};
+	this.GetGoldCoin = function() {
+		return GoldCoin;
+	};
+	this.GetSilverCoin = function() {
+		return SilverCoin;
+	};
+	this.GetBronzeCoin = function() {
+		return BronzeCoin;
 	};
 	this.SetSpeed = function(ArgSpeed) {
 		speed = ArgSpeed;
@@ -229,6 +235,15 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	this.SetDirection = function(ArgDirection) {
 		direction = ArgDirection;
 	};
+	this.SetGoldCoin = function(ArgNum) {
+		GoldCoin = ArgNum;
+	};
+	this.SetSilverCoin = function(ArgNum) {
+		SilverCoin = ArgNum;
+	};
+	this.SetBronzeCoin = function(ArgNum) {
+		BronzeCoin = ArgNum;
+	};
 	this.MoveLeft = function(scale) {
 		this.SetDirection("left");
 		this.setX(this.getX() - scale*speed);
@@ -272,7 +287,7 @@ function Sheep(argX, argY, argZ) {
 			this.SetPreX(this.getX());
 			this.SetPreY(this.getY());
 			this.SetSkill2CD(this.GetMaxSkill2CD());
-			WaitDrawObjects.objects.push(new Flash(this.getX(), this.getY(), Math.round(this.getZ())));
+			WaitDrawObjects.push(new Flash(this.getX(), this.getY(), Math.round(this.getZ())));
 			if(this.GetDirection() == "left") {
 				this.setX(Math.round(this.getX()-2));
 			}
@@ -291,7 +306,7 @@ function Sheep(argX, argY, argZ) {
 
 // 角色" "結構
 function Wolf(argX, argY, argZ) {
-	Role.call(this, argX, argY, argZ, wolf, "Wolf", 3, 4, 20, 20, "TreasureDefender", flash, flash);
+	Role.call(this, argX, argY, argZ, wolf, "Wolf", 5, 4, 20, 20, "TreasureDefender", flash, flash);
 	var HideTime = 0;
 	var SpeedTime = 0;
 	var OnHide = false;
@@ -372,7 +387,7 @@ function Wolf(argX, argY, argZ) {
 	};
 }
 
-// 道具基本結構，owner一開始皆為"NoOwner"
+// 物品基本結構，owner一開始皆為"NoOwner"
 function Item(argX, argY, argZ, ArgImg) {
 	BaseObj.call(this, argX, argY, argZ, ArgImg);
 	var owner = "NoOwner";
@@ -388,11 +403,26 @@ function Item(argX, argY, argZ, ArgImg) {
 	this.ActiveUse = function() {
 		return;
 	};
-	this.update = function(progress) {
-		if(this.GetOwner() != "NoOwner") {
-			this.SetState("invisible");
-		} 
-	};
+	this.contact = function(role) {
+		return;
+	}
+}
+
+// 寶藏結構(歸類為物品)
+function Treasure(argX, argY, argZ) {
+	Item.call(this, argX, argY, argZ, treasure);
+	this.contact = function(role) {
+		if(role.GetIdentity() == "TreasureHunter") {
+			role.SetItem(this);
+			this.SetOwner(role);
+			this.SetState("vanish");
+		}
+	}
+}
+
+// 出口結構
+function Exit(argX, argY, argZ) {
+	BaseObj.call(this, argX, argY, argZ, exit);
 }
 
 function SpeedShoes(argX, argY, argZ) {
@@ -406,16 +436,6 @@ function SpeedShoes(argX, argY, argZ) {
 			OnPassiveUse = true;
 		}
 	};
-}
-
-// 寶藏結構(歸類為道具)
-function Treasure(argX, argY, argZ) {
-	Item.call(this, argX, argY, argZ, treasure);
-}
-
-// 出口結構
-function Exit(argX, argY, argZ) {
-	BaseObj.call(this, argX, argY, argZ, exit);
 }
 
 // 閃光效果結構
@@ -433,12 +453,42 @@ function Flash(argX, argY, argZ) {
 	};
 }
 
-// 金幣結構
-function GoldCoin(argX, argY, argZ) {
-	BaseObj.call(this, argX, argY, argZ, goldcoin);
+// 幣結構
+function Coin(argX, argY, argZ, ArgImg) {
+	BaseObj.call(this, argX, argY, argZ, ArgImg);
 	var ExistTime = 0;
 	this.update = function(progress) {
 		ExistTime += progress;
 		this.setY(Math.round(this.getY()) + Math.sin(3*ExistTime)/10);
+	};
+	this.contact = function(role) {
+		return;
+	};
+}
+
+// 金幣結構
+function GoldCoin(argX, argY, argZ) {
+	Coin.call(this, argX, argY, argZ, goldcoin);
+	this.contact = function(role) {
+		role.SetGoldCoin(role.GetGoldCoin()+1);
+		this.SetState("vanish");
+	};
+}
+
+// 銀幣結構 
+function SilverCoin(argX, argY, argZ) {
+	Coin.call(this, argX, argY, argZ, silvercoin);
+	this.contact = function(role) {
+		role.SetSilverCoin(role.GetSilverCoin()+1);
+		this.SetState("vanish");
+	};
+}
+
+// 銅幣結構 
+function BronzeCoin(argX, argY, argZ) {
+	Coin.call(this, argX, argY, argZ, bronzecoin);
+	this.contact = function(role) {
+		role.SetBronzeCoin(role.GetBronzeCoin()+1);
+		this.SetState("vanish");
 	};
 }

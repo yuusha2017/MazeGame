@@ -1,4 +1,4 @@
-﻿// 遊戲的簡易AI
+// 遊戲的簡易AI
 function AI(name, role) {
     this.name = name;
     this.role = role;
@@ -77,6 +77,9 @@ function AI(name, role) {
         this.RoleZ = this.RoleInitialZ + Math.round(this.RoleRelativeZ);
 
         // 更新玩家資訊記憶
+        while(this.Memory_OtherPlayers.length > Info.OtherPlayers.length) {
+            this.Memory_OtherPlayers.pop();
+        }
         for(var PlayerNum = 0; PlayerNum < Info.OtherPlayers.length; ++PlayerNum) {
             this.Memory_OtherPlayers[PlayerNum].Name = Info.OtherPlayers[PlayerNum].Name;
             if(Info.OtherPlayers[PlayerNum].RelativeX != "unknown" && Info.OtherPlayers[PlayerNum].RelativeY != "unknown") {
@@ -154,7 +157,7 @@ function AI(name, role) {
             }
         }
 
-        if(this.Memory_OtherPlayers[0].RelativeX != "unknown" && this.Memory_OtherPlayers[0].RelativeY != "unknown")  {
+        if(this.Memory_OtherPlayers.length != 0 && this.Memory_OtherPlayers[0].RelativeX != "unknown" && this.Memory_OtherPlayers[0].RelativeY != "unknown")  {
             this.ObjectPositionX = this.RoleInitialX + Math.round(this.Memory_OtherPlayers[0].RelativeX);
             this.ObjectPositionY = this.RoleInitialY + Math.round(this.Memory_OtherPlayers[0].RelativeY);
         }
