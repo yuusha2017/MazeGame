@@ -1,4 +1,4 @@
-// 遊戲的簡易AI
+﻿// 遊戲的簡易AI
 function AI(name, role) {
     this.name = name;
     this.role = role;

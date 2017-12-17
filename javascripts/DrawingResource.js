@@ -1,4 +1,4 @@
-var GC = document.getElementById("GameCanvas");								
+﻿var GC = document.getElementById("GameCanvas");								
 var GCCT = GC.getContext("2d");
 GCCT.lineWidth = 2;
 GCCT.font = "40px verdana";
@@ -112,6 +112,7 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	var Skill2CD = 0;
 	var Skill1Image = ArgSkill1Image;
 	var Skill2Image = ArgSkill2Image;
+	var visibility = 100;
 	var items = ["NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem"];
 	var GoldCoin = 0;
 	var SilverCoin = 0;
@@ -157,6 +158,9 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	};
 	this.GetSkill2Image = function() {
 		return Skill2Image;
+	};
+	this.GetVisibility = function() {
+		return visibility;
 	};
 	this.GetItem = function(ItemNumber) {
 		return items[ItemNumber];
@@ -208,6 +212,9 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	};
 	this.SetSkill2CD = function(ArgCD) {
 		Skill2CD = ArgCD;
+	};
+	this.SetVisibility = function(ArgVisibility) {
+		visibility = ArgVisibility;
 	};
 	this.SetItem = function(item) {
 		var j = 0;
@@ -301,7 +308,7 @@ function Sheep(argX, argY, argZ) {
 				this.setY(Math.round(this.getY()+2));
 			}
 		}
-	}
+	};
 }
 
 // 角色" "結構
@@ -312,7 +319,6 @@ function Wolf(argX, argY, argZ) {
 	var OnHide = false;
 	var OnSpeed = false;
 	var SkillSpeed = 2;
-	var visibility = 100;
 	var ExistTime = 0;
 	this.Skill1 = function() {
 		if(this.GetSkill1CD() == 0) {
@@ -340,18 +346,14 @@ function Wolf(argX, argY, argZ) {
 			SpeedTime = 0;
 			HideTime = 10;
 			OnHide = true;
-			this.SetState("invisible");
 			this.SetSpeed(this.GetSpeed() - 0.5);
-			if(visibility > 100) {
-				visibility = 200 - visibility;
-			}
 		}
 	};
 
 	// 這裡寫得不好
 	this.DrawingSetting = function() {
-			GCCT.globalAlpha = visibility;
-	}
+			GCCT.globalAlpha = this.GetVisibility();
+	};
 	this.update = function(progress) {
 		ExistTime += progress;
 		if(this.GetSkill1CD() > 0) {
@@ -373,7 +375,10 @@ function Wolf(argX, argY, argZ) {
 			HideTime = (HideTime-progress < 0) ? 0 : (HideTime-progress);
 		}
 		if(OnHide == true) {
-			visibility = (visibility-Math.sin(progress)/2 < 0) ? 0 : (visibility-Math.sin(progress)/2);
+			this.SetVisibility(((this.GetVisibility()-Math.sin(progress)/2 < 0) ? 0 : (this.GetVisibility()-Math.sin(progress)/2)));
+			if(this.GetVisibility() == 0) {
+				this.SetState("invisible");
+			}
 			if(HideTime == 0) {
 				ExistTime = 0;
 				OnHide = false;
@@ -382,7 +387,7 @@ function Wolf(argX, argY, argZ) {
 			}
 		}
 		else {
-			visibility = Math.abs(Math.sin(ExistTime/2));
+			this.SetVisibility(Math.abs(Math.sin(ExistTime/2)));
 		}
 	};
 }
@@ -470,8 +475,10 @@ function Coin(argX, argY, argZ, ArgImg) {
 function GoldCoin(argX, argY, argZ) {
 	Coin.call(this, argX, argY, argZ, goldcoin);
 	this.contact = function(role) {
-		role.SetGoldCoin(role.GetGoldCoin()+1);
-		this.SetState("vanish");
+		if(role.GetIdentity() == "TreasureHunter") {
+			role.SetGoldCoin(role.GetGoldCoin()+1);
+			this.SetState("vanish");
+		}
 	};
 }
 
@@ -479,8 +486,10 @@ function GoldCoin(argX, argY, argZ) {
 function SilverCoin(argX, argY, argZ) {
 	Coin.call(this, argX, argY, argZ, silvercoin);
 	this.contact = function(role) {
-		role.SetSilverCoin(role.GetSilverCoin()+1);
-		this.SetState("vanish");
+		if(role.GetIdentity() == "TreasureHunter") {
+			role.SetSilverCoin(role.GetSilverCoin()+1);
+			this.SetState("vanish");
+		}
 	};
 }
 
@@ -488,7 +497,9 @@ function SilverCoin(argX, argY, argZ) {
 function BronzeCoin(argX, argY, argZ) {
 	Coin.call(this, argX, argY, argZ, bronzecoin);
 	this.contact = function(role) {
-		role.SetBronzeCoin(role.GetBronzeCoin()+1);
-		this.SetState("vanish");
+		if(role.GetIdentity() == "TreasureHunter") {
+			role.SetBronzeCoin(role.GetBronzeCoin()+1);
+			this.SetState("vanish");
+		}
 	};
 }

@@ -40,7 +40,7 @@ var Control = {
     treasure : {},
     audio : document.createElement("audio"),
     LastTimeStamp : 0,
-    AINumber : 0,
+    AINumber : 1,
     ViewRoleNum : 0,                    // 觀賞哪個角色視角
     OpeRoleNum : 0,                     // 操作哪個角色
 
@@ -187,11 +187,9 @@ var Control = {
             }
         }
 
-        // 出口與寶藏列入繪畫清單
+        // 出口與寶藏
         this.exit = new Exit(1,1,0);
         this.treasure = new Treasure(1,1,0);
-        WaitDrawObjects.push(this.exit);
-        WaitDrawObjects.push(this.treasure);
 
         // 玩家與玩家角色
         this.RoleList = [new Sheep(1,1,0)];
@@ -241,6 +239,10 @@ var Control = {
         for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
             WaitDrawObjects.push(this.RoleList[RoleNum]);
         }
+
+        // 出口與寶藏列入繪畫清單
+        WaitDrawObjects.push(this.exit);
+        WaitDrawObjects.push(this.treasure);
        
         // 金幣
         for(var i = 0; i < 10; ++i) {
@@ -481,7 +483,9 @@ var Control = {
             // 物品取得
             if(this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())] != "NoItem") {
                 this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())].contact(this.RoleList[RoleNum]);
-                this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())] = "NoItem"; 
+                if(this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())].GetState() == "vanish") {
+                    this.ItemMap[Math.round(this.RoleList[RoleNum].getZ())][Math.round(this.RoleList[RoleNum].getX())][Math.round(this.RoleList[RoleNum].getY())] = "NoItem"; 
+                }
             }
             // for(var ItemNum = 0; ItemNum < this.ItemList.length; ++ItemNum) {
             //     if(ReachDetermination(this.RoleList[RoleNum], this.ItemList[ItemNum]) == true && this.ItemList[ItemNum].GetOwner() == "NoOwner") {
@@ -508,16 +512,25 @@ var Control = {
         check(this.HunterList);
 
         // 心跳音效
-        var distance;
+        var distance = Infinity;
         var ShortestDistance = Infinity;
-        for(var RoleNum = 1; RoleNum < this.RoleList.length; ++ RoleNum) {
-            distance = Math.pow(Math.pow(this.RoleList[this.OpeRoleNum].getX() - this.RoleList[RoleNum].getX(), 2) + Math.pow(this.RoleList[this.OpeRoleNum].getY() - this.RoleList[RoleNum].getY(), 2), 0.5);
-            if(distance < ShortestDistance && this.RoleList[RoleNum].getZ() == this.RoleList[this.OpeRoleNum].getZ()) {
+        for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
+            if(RoleNum == this.ViewRoleNum) {
+                console.log(1);
+                continue;
+            }
+            if(this.RoleList[RoleNum].getZ() - this.RoleList[this.ViewRoleNum].getZ() < 0.5) {
+                distance = distance2d(this.RoleList[this.ViewRoleNum].getX(), this.RoleList[this.ViewRoleNum].getY(), this.RoleList[RoleNum].getX(), this.RoleList[RoleNum].getY());
+            }
+            if(distance < ShortestDistance) {
                 ShortestDistance = distance;
             }
         }
         if(ShortestDistance <= 10) {
             this.audio.playbackRate = 3 - ShortestDistance/5;
+        }
+        else {
+            this.audio.playbackRate = 1;
         }
 
 

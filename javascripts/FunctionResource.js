@@ -360,7 +360,7 @@ function GetAIAvailableInfo(AIRole, Roles, AIMaze) {
 			if(IsOutOfMaze(AIMaze[IntZ], IntX + x, IntY + y && Math.abs(Z - IntZ) < 0.1)) {
 				Info.Maze[x + Math.round(ViewableGrid - offsetX)].push("Border");
 			}
-			else if(distance(x,y,offsetX,offsetY) <= ViewScope && Math.abs(Z - IntZ) < 0.1) {
+			else if(distance2d(x,y,offsetX,offsetY) <= ViewScope && Math.abs(Z - IntZ) < 0.1) {
 				Info.Maze[x + Math.round(ViewableGrid - offsetX)].push(AIMaze[IntZ][IntX + x][IntY + y]);
 			}
 			else {
@@ -371,8 +371,8 @@ function GetAIAvailableInfo(AIRole, Roles, AIMaze) {
 
 	// 填充其它可視玩家資訊
 	for(var PlayerNum = 0; PlayerNum < Roles.length; ++PlayerNum) {
-		if(AIRole != Roles[PlayerNum] ){
-			if(AIRole.getZ() == Roles[PlayerNum].getZ() && distance(X, Y, Roles[PlayerNum].getX(), Roles[PlayerNum].getY()) <= ViewScope) {
+		if(AIRole != Roles[PlayerNum]){
+			if(AIRole.getZ() == Roles[PlayerNum].getZ() && distance2d(X, Y, Roles[PlayerNum].getX(), Roles[PlayerNum].getY()) <= ViewScope && Roles[PlayerNum].GetState() != "invisible") {
 				Info.OtherPlayers.push({Name : Roles[PlayerNum].GetOperator().GetName(), 
 											   RelativeX : Roles[PlayerNum].getX() - X, 
 											   RelativeY : Roles[PlayerNum].getY() - Y});
@@ -536,7 +536,7 @@ function IsOutOfMaze(maze, x, y) {
 }
 
 // 回傳距離(二維)
-function distance(x1, y1, x2, y2) {
+function distance2d(x1, y1, x2, y2) {
 	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
 }
 

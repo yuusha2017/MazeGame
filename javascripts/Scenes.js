@@ -454,19 +454,22 @@ var GameScene = {
 		}
 
 		// 地圖上物件繪製
-		for(var i = 0; i < WaitDrawObjects.length; ++i) {
+		if(role.GetIdentity() != "TreasureHunter") {
+			Control.treasure.SetState("invisible");
+		}
+		for(var i = WaitDrawObjects.length-1; i >= 0; --i) {
 			GCCT.save();
 			WaitDrawObjects[i].DrawingSetting();
-			if(WaitDrawObjects[i].getZ() == Math.round(role.getZ()) && Math.abs(WaitDrawObjects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects[i].getY() - role.getY()) <= RoleViewScope) {
+			if(WaitDrawObjects[i].getZ() == Math.round(role.getZ()) && Math.abs(WaitDrawObjects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects[i].getY() - role.getY()) <= RoleViewScope && WaitDrawObjects[i].GetState() != "invisible") {
 				GCCT.drawImage(WaitDrawObjects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects[i].getY() - role.getY()), this.SL, this.SL);
 			}
 			GCCT.restore();
 		}
 
 		// 無論是否隱形自己至少看的到自己
-		if(role.GetState() == "invisible") {
+		if(role.GetVisibility() < 0.1) {
 			GCCT.save();
-			GCCT.globalAlpha = 0.1;
+			GCCT.globalAlpha = 0.1 - role.GetVisibility();
 			GCCT.drawImage(role.GetImage(), this.CenterGridLeftTopX, this.CenterGridLeftTopY, this.SL, this.SL);
 			GCCT.restore();
 		}
@@ -575,13 +578,6 @@ var GameScene = {
 		}
 		GCCT.drawImage(role.GetSkill2Image(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
 
-		// 玩家擁有物品繪製
-		for(var i = -2; i <= 5; ++i) {
-			if(role.GetItem(i+2) != "NoItem") {
-				GCCT.drawImage(role.GetItem(i+2).GetImage(), this.CenterGridLeftTopX + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)),this.CenterGridLeftTopY + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
-			}
-		}
-
 		// 物品環繪製
 		GCCT.save();
 		for(var i = -2; i <= 5; ++i) {
@@ -592,6 +588,19 @@ var GameScene = {
 				GCCT.globalAlpha = 0.2;
 			}
 			GCCT.drawImage(ItemBorder, centerX - this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3)*Math.cos(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),centerY - this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3 )*Math.sin(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),this.FixedSL,this.FixedSL);
+		}
+
+		// 玩家擁有物品繪製
+		for(var i = -2; i <= 5; ++i) {
+			if(role.GetItem(i+2) != "NoItem") {
+				if(i+2 == AngleOffset/45) {
+					GCCT.globalAlpha = 1;
+				}
+				else {
+					GCCT.globalAlpha = 0.2;
+				}
+				GCCT.drawImage(role.GetItem(i+2).GetImage(), this.CenterGridLeftTopX + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)),this.CenterGridLeftTopY + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
+			}
 		}
 		GCCT.restore();
 
