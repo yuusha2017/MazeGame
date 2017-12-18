@@ -94,9 +94,9 @@ var OptionScene = {
 	selection : 0,					// 選擇
 
 	// 迷宮的長寬高
-	MazeLength : 25,
-	MazeWidth : 25,
-	MazeHeight : 5,
+	MazeLength : 7,
+	MazeWidth : 7,
+	MazeHeight : 1,
 
 	// 迷宮可設定的最大長寬高
 	MaxMazeLength : 50,
@@ -313,7 +313,8 @@ var OptionScene = {
 
 // 遊戲場景繪製物件
 var GameScene = { 	
-	maze : ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(10,10,5)),	// 遊戲迷宮
+	maze : [],	// 遊戲迷宮
+	MazeImg : [],
 	SL : 120, 						// SideLength, 遊戲一格的邊長, 隨viewscope改變
 	SLPlus : this.SL+1,				// SideLength+1		
 	HalfSL : this.SL/2,				// SideLength/2
@@ -323,19 +324,19 @@ var GameScene = {
 	SkillGrid2X : innerWidth - this.HalfFixSL,		// 技能格2的x座標
 	SkillGridY : innerHeight - this.HalfFixSL,		// 技能格的y座標
 	SkillCDLoopRadius : 1.2*this.HalfFixSL,			// 技能CD環的半徑
-	CenterGridLeftTopX : centerX - this.HalfSL,		// Canvas中心格的左上角x座標
-	CenterGridLeftTopY : centerY - this.HalfSL,		// Canvas中心格的左上角y座標
 	ViewScope : "unknown",							// 可視範圍
 	ChangeItemAnimationRequest : false,				// 動畫開關
 	ItemChangeDirection :　"unknown",			   // 物件選擇旋轉方向
+
+	GetSL : function() {
+		return this.SL;
+	},
 
 	// 重設SL
 	SetSL : function(ArgSL) {
 		this.SL = ArgSL;
 		this.SLPlus = this.SL + 1;
 		this.HalfSL = this.SL/2;
-		this.CenterGridLeftTopX = centerX - this.HalfSL;
-		this.CenterGridLeftTopY = centerY - this.HalfSL;
 	},
 
 	// 重設固定邊長
@@ -351,6 +352,7 @@ var GameScene = {
 	// 更新迷宮
 	UpdateMaze : function(length, width, height) {
 		this.maze = ThinWallMazeToThickWallMazeConverter(ThinWallMazeGenerator(length, width, height));
+		this.MazeImg = MazeToImg(this.maze);
 	},
 
 	// 取得迷宮
@@ -366,6 +368,7 @@ var GameScene = {
 
 	// 繪製角色的可視畫面
 	UpdateViewScope : function(role) {
+		GCCT.save();
 		var RoleFloorX = Math.floor(role.getX());
 		var RoleFloorY = Math.floor(role.getY());
 		var RoleIntZ = Math.round(role.getZ());
@@ -375,10 +378,12 @@ var GameScene = {
 		var RoleViewScope = role.GetViewScope();
 
 		// 地圖重繪
+		GCCT.translate(centerX, centerY);
 		GCCT.fillStyle = "White";
-		GCCT.fillRect(centerX - this.SL*RoleViewScope, centerY - this.SL*RoleViewScope, this.SL*RoleViewScope*2, this.SL*RoleViewScope*2);
+		GCCT.fillRect(-this.SL*RoleViewScope, -this.SL*RoleViewScope, this.SL*RoleViewScope*2, this.SL*RoleViewScope*2);
 
 		// Skill1技能格重繪
+		GCCT.translate(-centerX, -centerY);
 		GCCT.beginPath();
 		GCCT.strokeStyle = "Black";
 		GCCT.fillStyle = "Black";
@@ -395,61 +400,25 @@ var GameScene = {
 		GCCT.fill();
 
 		// 地圖繪製
+		GCCT.translate(centerX, centerY);
 		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
 			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
+				GCCT.translate((x-offsetX)*this.SL, (y-offsetY)*this.SL);
 				if(RoleFloorY + y == -1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1) {
-					GCCT.drawImage(OutOfMazeWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-				}
-				else if(RoleFloorY + y == this.maze[RoleIntZ][RoleFloorX].length-1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1) {
-					GCCT.drawImage(WallOutOfMaze, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
+					GCCT.drawImage(OutOfMazeWall, -this.HalfSL, -this.HalfSL, this.SLPlus, this.SLPlus);
 				}
 				else if(RoleFloorY + y < -1 || RoleFloorY + y > this.maze[RoleIntZ][RoleFloorX].length-1 || RoleFloorX + x < 0 || RoleFloorX + x > this.maze[RoleIntZ].length - 1) {
-					GCCT.drawImage(OutOfMaze, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);			// +1用來填補firefox與ie抗鋸齒所造成的gap
-				}
-				else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object == "wall") {
-					if(RoleFloorY + y + 1 > this.maze[RoleIntZ][RoleFloorX + x].length - 1 || this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object == "wall") {
-						GCCT.drawImage(MazeWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-					else {
-						GCCT.drawImage(MazeFrontWall, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-				}
-				else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object == "PassageDown") {
-					if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y - 1].object != "wall") {
-						GCCT.drawImage(MazeWallDownPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-					else if(this.maze[RoleIntZ][RoleFloorX + x + 1][RoleFloorY + y].object != "wall") {
-						GCCT.drawImage(MazeWallLeftPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-					else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object != "wall") {
-						GCCT.drawImage(MazeWallUpPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-					else if(this.maze[RoleIntZ][RoleFloorX + x - 1][RoleFloorY + y].object != "wall") {
-						GCCT.drawImage(MazeWallRightPassageDown, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);							
-					}
-				}
-				else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object == "PassageUp" ) {
-					if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y - 1].object != "wall") {
-						GCCT.drawImage(MazeWallDownPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-					else if(this.maze[RoleIntZ][RoleFloorX + x + 1][RoleFloorY + y].object != "wall") {
-						GCCT.drawImage(MazeWallLeftPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
-					}
-					else if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object != "wall") {
-						GCCT.drawImage(MazeWallUpPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY  - 2*this.SL/3 + (y-offsetY)*this.SL,  this.SLPlus, 5*this.SL/3+1);
-					}
-					else if(this.maze[RoleIntZ][RoleFloorX + x - 1][RoleFloorY + y].object != "wall") {
-						GCCT.drawImage(MazeWallRightPassageUp, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);							
-					}
+					GCCT.drawImage(OutOfMaze, -this.HalfSL, -this.HalfSL, this.SLPlus, this.SLPlus);			// +1用來填補firefox與ie抗鋸齒所造成的gap
 				}
 				else {
-					if(this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y - 1].object == "wall") {
-						GCCT.drawImage(MazeWallFloor, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
+					if(this.MazeImg[RoleIntZ][RoleFloorX + x][RoleFloorY + y] == MazeWallUpPassageUp) {
+						GCCT.drawImage(this.MazeImg[RoleIntZ][RoleFloorX + x][RoleFloorY + y], -this.HalfSL, -this.HalfSL - 2*this.SL/3, this.SLPlus, 5*this.SL/3+1);
 					}
 					else {
-						GCCT.drawImage(MazeFloor, this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
+						GCCT.drawImage(this.MazeImg[RoleIntZ][RoleFloorX + x][RoleFloorY + y], -this.HalfSL, -this.HalfSL, this.SLPlus, this.SLPlus);
 					}
 				}
+				GCCT.translate(-((x-offsetX)*this.SL), -((y-offsetY)*this.SL));
 			}
 		}
 
@@ -458,44 +427,44 @@ var GameScene = {
 			Control.treasure.SetState("invisible");
 		}
 		for(var i = WaitDrawObjects.length-1; i >= 0; --i) {
-			GCCT.save();
-			WaitDrawObjects[i].DrawingSetting();
 			if(WaitDrawObjects[i].getZ() == Math.round(role.getZ()) && Math.abs(WaitDrawObjects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects[i].getY() - role.getY()) <= RoleViewScope && WaitDrawObjects[i].GetState() != "invisible") {
-				GCCT.drawImage(WaitDrawObjects[i].GetImage(), this.CenterGridLeftTopX + this.SL*(WaitDrawObjects[i].getX() - role.getX()), this.CenterGridLeftTopY + this.SL*(WaitDrawObjects[i].getY() - role.getY()), this.SL, this.SL);
+				GCCT.save();
+				WaitDrawObjects[i].DrawingSetting();
+				GCCT.translate(this.SL*(WaitDrawObjects[i].getX() - role.getX()), this.SL*(WaitDrawObjects[i].getY() - role.getY()));
+				GCCT.drawImage(WaitDrawObjects[i].GetImage(), -this.HalfSL, -this.HalfSL, this.SL, this.SL);
+				GCCT.restore();
 			}
-			GCCT.restore();
 		}
 
 		// 無論是否隱形自己至少看的到自己
 		if(role.GetVisibility() < 0.1) {
-			GCCT.save();
 			GCCT.globalAlpha = 0.1 - role.GetVisibility();
-			GCCT.drawImage(role.GetImage(), this.CenterGridLeftTopX, this.CenterGridLeftTopY, this.SL, this.SL);
-			GCCT.restore();
+			GCCT.drawImage(role.GetImage(), -this.HalfSL, -this.HalfSL, this.SL, this.SL);
+			GCCT.globalAlpha = 1;
 		}
 
 		// 蓋過地圖上物件的牆繪製
-		GCCT.save();
 		for(var x = -Math.ceil(RoleViewScope); x <= Math.round(RoleViewScope)+1; ++x) {
 			for(var y = -Math.ceil(RoleViewScope); y <= Math.round(RoleViewScope)+1; ++y) {
 				if(RoleFloorY + y >= 0 && RoleFloorY + y <= this.maze[RoleIntZ][RoleFloorX].length - 1 && RoleFloorX + x >= 0 && RoleFloorX + x <= this.maze[RoleIntZ].length - 1 && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y].object != "wall" && this.maze[RoleIntZ][RoleFloorX + x][RoleFloorY + y + 1].object == "wall") {
-					GCCT.drawImage(MazeFloorWall,this.CenterGridLeftTopX + (x-offsetX)*this.SL, this.CenterGridLeftTopY + (y-offsetY)*this.SL,  this.SLPlus, this.SLPlus);
+					GCCT.translate((x-offsetX)*this.SL, (y-offsetY)*this.SL);
+					GCCT.drawImage(MazeFloorWall, -this.HalfSL, -this.HalfSL, this.SLPlus, this.SLPlus);
+					GCCT.translate(-((x-offsetX)*this.SL), -((y-offsetY)*this.SL));
 				}
 			}
 		}
-		GCCT.restore();
 
-		//視野漸層效果繪製
-		var grd = GCCT.createRadialGradient(centerX, centerY, this.HalfSL, centerX, centerY, this.SL*RoleViewScope);
+		//視野漸層效果繪製，Nonzero-rule
+		var grd = GCCT.createRadialGradient(0, 0, 0, 0, 0, this.SL*RoleViewScope);
 		grd.addColorStop(0, "RGBA(0,0,0,0)");
 		grd.addColorStop(1, "RGBA(0,0,0,1)");
 		GCCT.fillStyle = grd;
 		GCCT.beginPath();
-		GCCT.arc(centerX, centerY, this.SL*(RoleViewScope), 0, 2*Math.PI);
+		GCCT.arc(0, 0, this.SL*(RoleViewScope)+1, 0, 2*Math.PI); // Chrome的bug(或喜愛?)，rect(或多邊形?)內有半徑為零的arc將無法正常fill，因此+1
 		GCCT.stroke();
 		GCCT.fill();
 		GCCT.fillStyle = "Black";
-		GCCT.rect(centerX+this.SL*(RoleViewScope+2)+1.5*this.FixedSL,centerY-this.SL*(RoleViewScope+2)-1.5*this.FixedSL,-2*(this.SL*(RoleViewScope+2)+1.5*this.FixedSL),2*(this.SL*(RoleViewScope+2) + 1.5*this.FixedSL));
+		GCCT.rect(GC.width/2, -GC.height/2, -GC.width, GC.height);
 		GCCT.fill();
 
 		// 上樓動畫繪製
@@ -521,7 +490,7 @@ var GameScene = {
 			grd.addColorStop(0, "RGBA(255,255,255,1)");
 			grd.addColorStop(1, "RGBA(255,255,255,0.5)");
 			GCCT.fillStyle = grd;
-			GCCT.arc(centerX, centerY, this.SL*(RoleViewScope), 0, 2*Math.PI);
+			GCCT.arc(0, 0, this.SL*(RoleViewScope), 0, 2*Math.PI);
 			GCCT.fill();
 			GCCT.restore();
 		}
@@ -549,75 +518,95 @@ var GameScene = {
 			grd.addColorStop(0, "RGBA(255,255,255,1)");
 			grd.addColorStop(1, "RGBA(255,255,255,0.5)");
 			GCCT.fillStyle = grd;
-			GCCT.arc(centerX, centerY, this.SL*(RoleViewScope), 0, 2*Math.PI);
+			GCCT.arc(0, 0, this.SL*(RoleViewScope), 0, 2*Math.PI);
 			GCCT.fill();
 			GCCT.restore();
 		}
 
-		// Skill1技能格繪製
-		GCCT.beginPath();
-		if(role.GetSkill1CD() != 0) {
-			GCCT.save();
-			GCCT.strokeStyle = "White";
-			GCCT.lineWidth = 4;
-			GCCT.arc(innerWidth - 3*this.FixedSL/2,innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill1CD()/role.GetMaxSkill1CD());
-			GCCT.stroke();
-			GCCT.restore();
-		}
-		GCCT.drawImage(role.GetSkill1Image(), innerWidth - 2*this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
-		
-		// Skill2技能格繪製
-		GCCT.beginPath();
-		if(role.GetSkill2CD() != 0) {
-			GCCT.save();
-			GCCT.strokeStyle = "White";
-			GCCT.lineWidth = 4;
-			GCCT.arc(innerWidth - this.FixedSL/2, innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill2CD()/role.GetMaxSkill2CD());
-			GCCT.stroke();
-			GCCT.restore();
-		}
-		GCCT.drawImage(role.GetSkill2Image(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
-
-		// 物品環繪製
-		GCCT.save();
-		for(var i = -2; i <= 5; ++i) {
-			if(i == -2) {
-				GCCT.globalAlpha = 1;
-			}
-			else {
-				GCCT.globalAlpha = 0.2;
-			}
-			GCCT.drawImage(ItemBorder, centerX - this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3)*Math.cos(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),centerY - this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3 )*Math.sin(2*Math.PI/8*i + AngleOffset/360*2*Math.PI),this.FixedSL,this.FixedSL);
-		}
-
-		// 玩家擁有物品繪製
-		for(var i = -2; i <= 5; ++i) {
-			if(role.GetItem(i+2) != "NoItem") {
-				if(i+2 == AngleOffset/45) {
+		if(role.GetState() != "vanish") {
+			// 物品環繪製
+			for(var i = -2; i <= 5; ++i) {
+				if(i == -2) {
 					GCCT.globalAlpha = 1;
 				}
 				else {
 					GCCT.globalAlpha = 0.2;
 				}
-				GCCT.drawImage(role.GetItem(i+2).GetImage(), this.CenterGridLeftTopX + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)),this.CenterGridLeftTopY + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)),this.FixedSL,this.FixedSL);
+				GCCT.drawImage(ItemBorder, -this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3)*Math.cos(2*Math.PI/8*i + AngleOffset/360*2*Math.PI), -this.FixedSL/2 + (this.SL*(RoleViewScope) + this.FixedSL/3 )*Math.sin(2*Math.PI/8*i + AngleOffset/360*2*Math.PI), this.FixedSL, this.FixedSL);
+			}
+
+			// 玩家擁有物品繪製
+			for(var i = -2; i <= 5; ++i) {
+				if(role.GetItem(i+2) != "NoItem") {
+					if(i+2 == AngleOffset/45) {
+						GCCT.globalAlpha = 1;
+					}
+					else {
+						GCCT.globalAlpha = 0.2;
+					}
+					GCCT.drawImage(role.GetItem(i+2).GetImage(), -this.HalfSL + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)), -this.HalfSL + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)), this.FixedSL, this.FixedSL);
+				}
+			}
+			GCCT.globalAlpha = 1;
+
+			// 物品環選轉效果繪製
+			if(this.ChangeItemAnimationRequest == true) {
+				if(this.ItemChangeDirection == "clockwise") {
+					AngleOffset += 5;
+				}
+				else {
+					AngleOffset -= 5;
+				}
+				if(AngleOffset % 45 == 0) {
+					this.ChangeItemAnimationRequest = false;
+					if(AngleOffset % 360 == 0) {
+						AngleOffset = 0;
+					}
+				}
+			}
+
+			// Skill1技能格繪製
+			GCCT.translate(-centerX, -centerY);
+			GCCT.beginPath();
+			if(role.GetSkill1CD() != 0) {
+				GCCT.save();
+				GCCT.strokeStyle = "White";
+				GCCT.lineWidth = 4;
+				GCCT.arc(innerWidth - 3*this.FixedSL/2,innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill1CD()/role.GetMaxSkill1CD());
+				GCCT.stroke();
+				GCCT.restore();
+			}
+			GCCT.drawImage(role.GetSkill1Image(), innerWidth - 2*this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
+			
+			// Skill2技能格繪製
+			GCCT.beginPath();
+			if(role.GetSkill2CD() != 0) {
+				GCCT.save();
+				GCCT.strokeStyle = "White";
+				GCCT.lineWidth = 4;
+				GCCT.arc(innerWidth - this.FixedSL/2, innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill2CD()/role.GetMaxSkill2CD());
+				GCCT.stroke();
+				GCCT.restore();
+			}
+			GCCT.drawImage(role.GetSkill2Image(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
+
+			if(window.innerWidth > window.innerHeight*window.devicePixelRatio) {
+				// 繪製FPS資訊
+				GCCT.strokeStyle = "White";
+				GCCT.textAlign = "left";
+				GCCT.textBaseline = "top";
+				GCCT.lineWidth = 2;            
+				GCCT.strokeText("FPS : " + FPS, 0, 0);
+	
+				// 繪製時間資訊
+				minute = (Math.floor(Math.floor(GameTime)/60) < 10) ? ("0" + Math.floor(Math.floor(GameTime)/60)) : (Math.floor(Math.floor(GameTime)/60));
+				second = (Math.floor(GameTime)%60 < 10) ? ("0" + Math.floor(GameTime)%60) : (Math.floor(GameTime)%60);
+				GCCT.strokeText("Time : " + minute + ":" + second, 0, 40);
+	
+				// 繪製分數
+				GCCT.strokeText("Score : " + (10*role.GetGoldCoin()+5*role.GetSilverCoin()+role.GetBronzeCoin()), 0, 80);
 			}
 		}
 		GCCT.restore();
-
-		// 物品環選轉效果繪製
-		if(this.ChangeItemAnimationRequest == true) {
-			if(this.ItemChangeDirection == "clockwise") {
-				AngleOffset += 5;
-			}
-			else {
-				AngleOffset -= 5;
-			}
-			if(AngleOffset % 45 == 0) {
-				this.ChangeItemAnimationRequest = false;
-				if(AngleOffset % 360 == 0) {
-					AngleOffset = 0;
-				}
-			}
-		}
 	},
 };

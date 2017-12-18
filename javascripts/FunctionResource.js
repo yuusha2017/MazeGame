@@ -18,9 +18,9 @@ function resize(){
         }
         case "GameScene" : {
 			GameScene.SetFixedSL((window.innerHeight*window.devicePixelRatio)/2/5);
-			GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(Control.RoleList[0].GetViewScope()));
+			GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(Control.PlayerRoleOriginalScope));
 			GameScene.AllBlack();
-            GameScene.UpdateViewScope(Control.RoleList[0]);
+            GameScene.UpdateViewScope(Control.PlayerRole);
             break;
 		}
 		case "OptionScene" : {
@@ -316,6 +316,66 @@ function MazePassageGenerator(maze) {
 	}
 }
 
+function MazeToImg(maze) {
+	var MazeImg = [];
+	for(var z = 0; z < maze.length; ++z) {
+		MazeImg.push([])
+		for(var x = 0; x < maze[z].length; ++x) {
+			MazeImg[z].push([]);
+			for(var y = 0; y < maze[z][x].length; ++y) {
+				if(y == maze[z][x].length-1 && x >= 0 && x < maze[z].length) {
+					MazeImg[z][x].push(WallOutOfMaze);
+				}
+				else if(maze[z][x][y].object == "wall") {
+					if(y + 1 == maze[z][x].length || maze[z][x][y+1].object == "wall") {
+						MazeImg[z][x].push(MazeWall);
+					}
+					else {
+						MazeImg[z][x].push(MazeFrontWall);
+					}
+				}
+				else if(maze[z][x][y].object == "PassageDown") {
+					if(maze[z][x][y-1].object != "wall") {
+						MazeImg[z][x].push(MazeWallDownPassageDown);
+					}
+					else if(maze[z][x+1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallLeftPassageDown);
+					}
+					else if(maze[z][x][y+1].object != "wall") {
+						MazeImg[z][x].push(MazeWallUpPassageDown);
+					}
+					else if(maze[z][x-1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallRightPassageDown);							
+					}
+				}
+				else if(maze[z][x][y].object == "PassageUp" ) {
+					if(maze[z][x][y-1].object != "wall") {
+						MazeImg[z][x].push(MazeWallDownPassageUp);
+					}
+					else if(maze[z][x+1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallLeftPassageUp);
+					}
+					else if(maze[z][x][y+1].object != "wall") {
+						MazeImg[z][x].push(MazeWallUpPassageUp);
+					}
+					else if(maze[z][x-1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallRightPassageUp);							
+					}
+				}
+				else {
+					if(maze[z][x][y-1].object == "wall") {
+						MazeImg[z][x].push(MazeWallFloor);
+					}
+					else {
+						MazeImg[z][x].push(MazeFloor);
+					}
+				}
+			}
+		}
+	}
+	return MazeImg;
+}
+
 // 建立玩家物件
 function Player(name, role) {
 	this.KeyboardState = NoKey;
@@ -497,8 +557,6 @@ function LoadImage() {
 	MazeWallRightPassageUp.src = "images\\MazeWallRightPassageUp.png";
 	MazeWallDownPassageUp.src = "images\\MazeWallDownPassageUp.png";
 	MazeWallLeftPassageUp.src = "images\\MazeWallLeftPassageUp.png";
-	test.src = "images\\test.png";
-	test2.src = "images\\test2.png";
 	treasure.src = "images\\treasure.png";
 	exit.src = "images\\exit.png";
 	ItemBorder.src = "images\\ItemBorder.png";

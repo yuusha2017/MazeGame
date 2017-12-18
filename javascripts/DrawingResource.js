@@ -13,8 +13,6 @@ var MazeFrontWall = new Image();
 var MazeFloor = new Image();
 var MazeFloorWall = new Image();
 var MazeWallFloor = new Image();
-var test = new Image();
-var test2 = new Image();
 var OutOfMaze = new Image();
 var WallOutOfMaze = new Image();
 var OutOfMazeWall = new Image();
@@ -113,6 +111,8 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	var Skill1Image = ArgSkill1Image;
 	var Skill2Image = ArgSkill2Image;
 	var visibility = 100;
+	var WidthScale = 1;
+	var HeightScale = 1;
 	var items = ["NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem", "NoItem"];
 	var GoldCoin = 0;
 	var SilverCoin = 0;
@@ -161,6 +161,12 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	};
 	this.GetVisibility = function() {
 		return visibility;
+	};
+	this.GetWidthScale = function() {
+		return WidthScale;
+	};
+	this.GetHeightScale = function() {
+		return HeightScale;
 	};
 	this.GetItem = function(ItemNumber) {
 		return items[ItemNumber];
@@ -215,6 +221,12 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 	};
 	this.SetVisibility = function(ArgVisibility) {
 		visibility = ArgVisibility;
+	};
+	this.SetWidthScale = function(ArgScale) {
+		WidthScale = ArgScale;
+	};
+	this.SetHeightScale = function(ArgScale) {
+		HeightScale = ArgScale;
 	};
 	this.SetItem = function(item) {
 		var j = 0;
@@ -280,6 +292,12 @@ function Role(argX, argY, argZ, ArgImg, ArgName, ArgSpeed, ArgViewScope, ArgMaxS
 		if(this.GetSkill2CD() > 0) {
 			this.SetSkill2CD((this.GetSkill2CD()-progress < 0 ) ? 0 : (this.GetSkill2CD()-progress));
 		}
+		if(this.GetState() == "BeCatched") {
+			this.SetWidthScale((this.GetWidthScale() - 3*progress > 0) ? (this.GetWidthScale() - 3*progress) : 0);
+			if(this.GetWidthScale() == 0) {
+				this.SetState("vanish");
+			}
+		}
 	};
 }
 
@@ -308,6 +326,9 @@ function Sheep(argX, argY, argZ) {
 				this.setY(Math.round(this.getY()+2));
 			}
 		}
+	};
+	this.DrawingSetting = function() {
+		GCCT.scale(this.GetWidthScale(), 1);
 	};
 }
 
