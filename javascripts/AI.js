@@ -624,3 +624,11 @@ function AI(name, role) {
         return this.KeyboardSetting;
     };
 };
+
+var me = {};
+onmessage = function(e) {
+    me = new AI(e.name, e.role);
+    onmessage = function(e) {
+        
+    }
+}

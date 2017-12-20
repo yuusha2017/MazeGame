@@ -471,21 +471,21 @@ var GameScene = {
 		// 地圖上物件繪製
 		for(var i = WaitDrawObjects.length-1; i >= 0; --i) {
 			if(WaitDrawObjects[i].getZ() == Math.round(role.getZ()) && Math.abs(WaitDrawObjects[i].getX() - role.getX()) <= RoleViewScope && Math.abs(WaitDrawObjects[i].getY() - role.getY()) <= RoleViewScope && WaitDrawObjects[i].GetState() != "invisible") {
-				if(role.GetIdentity() != "TreasureHunter" &&　WaitDrawObjects[i] == Control.treasure) {
+				if(role.GetID() != "TreasureHunter" &&　WaitDrawObjects[i] == Control.treasure) {
 					continue;
 				}
 				GCCT.save();
 				WaitDrawObjects[i].DrawingSetting();
 				GCCT.translate(this.SL*(WaitDrawObjects[i].getX() - role.getX()), this.SL*(WaitDrawObjects[i].getY() - role.getY()));
-				GCCT.drawImage(WaitDrawObjects[i].GetImage(), -this.HalfSL, -this.HalfSL, this.SL, this.SL);
+				GCCT.drawImage(WaitDrawObjects[i].GetImg(), -this.HalfSL, -this.HalfSL, this.SL, this.SL);
 				GCCT.restore();
 			}
 		}
 
 		// 無論是否隱形自己至少看的到自己
-		if(role.GetVisibility() < 0.1) {
-			GCCT.globalAlpha = 0.1 - role.GetVisibility();
-			GCCT.drawImage(role.GetImage(), -this.HalfSL, -this.HalfSL, this.SL, this.SL);
+		if(role.GetAlpha() < 0.1) {
+			GCCT.globalAlpha = 0.1 - role.GetAlpha();
+			GCCT.drawImage(role.GetImg(), -this.HalfSL, -this.HalfSL, this.SL, this.SL);
 			GCCT.globalAlpha = 1;
 		}
 
@@ -517,7 +517,6 @@ var GameScene = {
 		if(role.GetState() == "GoUp") {
 			GCCT.save();
 			GCCT.beginPath();
-			GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(RoleViewScope));
 			GCCT.globalAlpha = (offsetZ <= 0.5) ? (2*offsetZ) : (2-2*offsetZ);
 			GCCT.strokeStyle = "White";
 			grd.addColorStop(0, "RGBA(255,255,255,1)");
@@ -532,7 +531,6 @@ var GameScene = {
 		if(role.GetState() == "GoDown") {
 			GCCT.save();
 			GCCT.beginPath();
-			GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(RoleViewScope));
 			GCCT.globalAlpha = (offsetZ >= 0.5) ? (2-2*offsetZ) : (2*offsetZ);
 			GCCT.strokeStyle = "White";
 			grd.addColorStop(0, "RGBA(255,255,255,1)");
@@ -564,7 +562,7 @@ var GameScene = {
 					else {
 						GCCT.globalAlpha = 0.2;
 					}
-					GCCT.drawImage(role.GetItem(i+2).GetImage(), -this.HalfSL + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)), -this.HalfSL + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)), this.FixedSL, this.FixedSL);
+					GCCT.drawImage(role.GetItem(i+2).GetImg(), -this.HalfSL + this.SL*(RoleViewScope+0.5)*Math.cos(2*Math.PI/8*(i)), -this.HalfSL + this.SL*(RoleViewScope+0.5)*Math.sin(2*Math.PI/8*(i)), this.FixedSL, this.FixedSL);
 				}
 			}
 			GCCT.globalAlpha = 1;
@@ -588,27 +586,27 @@ var GameScene = {
 			// Skill1技能格繪製
 			GCCT.translate(-centerX, -centerY);
 			GCCT.beginPath();
-			if(role.GetSkill1CD() != 0) {
+			if(role.GetCD1() != 0) {
 				GCCT.save();
 				GCCT.strokeStyle = "White";
 				GCCT.lineWidth = 4;
-				GCCT.arc(innerWidth - 3*this.FixedSL/2,innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill1CD()/role.GetMaxSkill1CD());
+				GCCT.arc(innerWidth - 3*this.FixedSL/2,innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetCD1()/role.GetCDT1());
 				GCCT.stroke();
 				GCCT.restore();
 			}
-			GCCT.drawImage(role.GetSkill1Image(), innerWidth - 2*this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
+			GCCT.drawImage(role.GetS1Img(), innerWidth - 2*this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
 			
 			// Skill2技能格繪製
 			GCCT.beginPath();
-			if(role.GetSkill2CD() != 0) {
+			if(role.GetCD2() != 0) {
 				GCCT.save();
 				GCCT.strokeStyle = "White";
 				GCCT.lineWidth = 4;
-				GCCT.arc(innerWidth - this.FixedSL/2, innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetSkill2CD()/role.GetMaxSkill2CD());
+				GCCT.arc(innerWidth - this.FixedSL/2, innerHeight - this.FixedSL/2, this.FixedSL/2, 0, 2*Math.PI*role.GetCD2()/role.GetCDT2());
 				GCCT.stroke();
 				GCCT.restore();
 			}
-			GCCT.drawImage(role.GetSkill2Image(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
+			GCCT.drawImage(role.GetS2Img(), innerWidth - this.FixedSL, innerHeight - this.FixedSL, this.FixedSL, this.FixedSL);
 
 			if(window.innerWidth > window.innerHeight*window.devicePixelRatio) {
 				// 繪製FPS資訊
@@ -624,7 +622,7 @@ var GameScene = {
 				GCCT.strokeText("Time : " + minute + ":" + second, 0, 40);
 	
 				// 繪製分數
-				GCCT.strokeText("Score : " + (10*role.GetGoldCoin()+5*role.GetSilverCoin()+role.GetBronzeCoin()), 0, 80);
+				GCCT.strokeText("Score : " + (role.GetMoney()), 0, 80);
 			}
 		}
 		GCCT.restore();

@@ -1,5 +1,13 @@
 // 所有未知的變數如未特別命名皆為unknown
 
+// 地圖xyz限制
+var minX = 1;
+var minY = 1;
+var minZ = 0;
+var maxX = "unknown";
+var maxY = "unknown";
+var maxZ = "unknown";
+
 // 計算遊戲時間
 var GameTime = 0;
 var minute = "00";
@@ -173,9 +181,17 @@ var Control = {
 
     LoadGame : function() {
 
+        m = new Worker("javascripts\\test.js");
+        m.postMessage(2);
+        m.postMessage(3);
+        // 地圖xyz限制更新
+        maxX = (2*OptionScene.GetMazeLength()+1)-2;
+        maxY = (2*OptionScene.GetMazeWidth()+1)-2;
+        maxZ = OptionScene.GetMazeHeight()-1;
+
         // 更新迷宮
         GameScene.UpdateMaze(OptionScene.GetMazeLength(), OptionScene.GetMazeWidth(), OptionScene.GetMazeHeight());
-
+        //console.log(GameScene.maze);
         // 初始化物品圖
         for(var z = 0; z < GameScene.maze.length; ++z) {
             this.ItemMap.push([]);
@@ -208,7 +224,7 @@ var Control = {
         }
         // 進行角色分類
         for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
-            if(this.RoleList[RoleNum].GetIdentity() == "TreasureHunter") {
+            if(this.RoleList[RoleNum].GetID() == "TreasureHunter") {
                 this.HunterList.push(this.RoleList[RoleNum]);
             }
             else {
@@ -302,7 +318,7 @@ var Control = {
         this.audio.setAttribute("src","heartbeat-01a.mp3");
         this.audio.setAttribute("autoplay", "autoplay");
         this.audio.setAttribute("loop", "loop");
-        if(this.RoleList[this.ViewRoleNum].GetIdentity() != "TreasureHunter") {
+        if(this.RoleList[this.ViewRoleNum].GetID() != "TreasureHunter") {
             this.audio.muted = true;
         }
         document.body.appendChild(this.audio);
@@ -423,29 +439,19 @@ var Control = {
                     this.RoleList[RoleNum].MoveDown(progress);
                 }
                 if((this.RoleList[RoleNum].GetOperator().GetKeyboardState() & KeyD) == KeyD) {
-                    this.RoleList[RoleNum].Skill1();
+                    this.RoleList[RoleNum].S1();
                 }
                 if((this.RoleList[RoleNum].GetOperator().GetKeyboardState() & KeyF) == KeyF) {
-                    this.RoleList[RoleNum].Skill2();
+                    this.RoleList[RoleNum].S2();
                 }
             }
             if((this.RoleList[RoleNum].GetOperator().GetKeyboardState() & KeyQ) == KeyQ) {
-                if( GameScene.ChangeItemAnimationRequest == false) {
-                    this.RoleList[RoleNum].SetItemSelection(this.RoleList[RoleNum].GetItemSelection()-1);
-                    if(this.RoleList[RoleNum].GetItemSelection() < 0) {
-                        this.RoleList[RoleNum].SetItemSelection(7);
-                    }
-                }
+                this.RoleList[RoleNum].ChangeItemSelection((GameScene.ChangeItemAnimationRequest == false) ? -1 : 0);
                 GameScene.ChangeItemAnimationRequest = true;
                 GameScene.ItemChangeDirection = "counterclockwise";
             }
             if((this.RoleList[RoleNum].GetOperator().GetKeyboardState() & KeyW) == KeyW) {
-                if( GameScene.ChangeItemAnimationRequest == false) {
-                    this.RoleList[RoleNum].SetItemSelection(this.RoleList[RoleNum].GetItemSelection()+1);
-                    if(this.RoleList[RoleNum].GetItemSelection() > 7) {
-                        this.RoleList[RoleNum].SetItemSelection(0);
-                    }
-                }
+                this.RoleList[RoleNum].ChangeItemSelection((GameScene.ChangeItemAnimationRequest == false) ? 1 : 0);
                 GameScene.ChangeItemAnimationRequest = true;
                 GameScene.ItemChangeDirection = "clockwise";
             }
@@ -454,19 +460,40 @@ var Control = {
             // 上樓下樓
             if(Math.round(this.RoleList[RoleNum].getX()) == this.RoleList[RoleNum].getX() && Math.round(this.RoleList[RoleNum].getY()) == this.RoleList[RoleNum].getY() && (this.RoleList[RoleNum].GetPreX() != this.RoleList[RoleNum].getX() || this.RoleList[RoleNum].GetPreY() != this.RoleList[RoleNum].getY()) && GameScene.maze[Math.round(this.RoleList[RoleNum].getZ())][this.RoleList[RoleNum].getX()][this.RoleList[RoleNum].getY()].object == "PassageUp" || this.RoleList[RoleNum].GetState() == "GoUp") {
                 this.RoleList[RoleNum].SetState("GoUp");
-                this.RoleList[RoleNum].setZ(this.RoleList[RoleNum].getZ() + 1/60);
+                this.RoleList[RoleNum].GoUp(progress);
+                // console.log( this.RoleList[RoleNum].GetViewScope());
                 if(Math.floor(this.RoleList[RoleNum].GetPreZ()) != Math.floor(this.RoleList[RoleNum].getZ())) {
                     this.RoleList[RoleNum].setZ(Math.round(this.RoleList[RoleNum].getZ()));
                     this.RoleList[RoleNum].SetState("visible");
-                    // this.RoleList[RoleNum].SetViewScope(this.Ori - (this.ViewScope-1)*(2-2*offsetZ));
+                    //this.RoleList[RoleNum].ChangeViewScope(-this.RoleList[RoleNum].GetViewScope());
+                }
+                if(this.RoleList[RoleNum].getZ() - Math.floor(this.RoleList[RoleNum].getZ()) <= 0.5) {
+                    this.RoleList[RoleNum].SetViewScope(this.RoleList[RoleNum].GetOriginalViewScope() + 4*(this.RoleList[RoleNum].getZ() - Math.floor(this.RoleList[RoleNum].getZ())));
+                }
+                else {
+                    this.RoleList[RoleNum].SetViewScope(this.RoleList[RoleNum].GetOriginalViewScope() - (this.RoleList[RoleNum].GetOriginalViewScope()-1)*(2-2*(this.RoleList[RoleNum].getZ() - Math.floor(this.RoleList[RoleNum].getZ()))));
+                }
+                if(RoleNum == this.ViewRoleNum) {
+                    GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(this.RoleList[RoleNum].GetViewScope()));
                 }
             }
             else if(Math.round(this.RoleList[RoleNum].getX()) == this.RoleList[RoleNum].getX() && Math.round(this.RoleList[RoleNum].getY()) == this.RoleList[RoleNum].getY() && (this.RoleList[RoleNum].GetPreX() != this.RoleList[RoleNum].getX() || this.RoleList[RoleNum].GetPreY() != this.RoleList[RoleNum].getY()) && GameScene.maze[Math.round(this.RoleList[RoleNum].getZ())][this.RoleList[RoleNum].getX()][this.RoleList[RoleNum].getY()].object == "PassageDown" || this.RoleList[RoleNum].GetState() == "GoDown") {
                 this.RoleList[RoleNum].SetState("GoDown");
-                this.RoleList[RoleNum].setZ(this.RoleList[RoleNum].getZ() - 1/60);
+                this.RoleList[RoleNum].GoDown(progress);
+                // console.log( this.RoleList[RoleNum].GetViewScope());
                 if(Math.ceil(this.RoleList[RoleNum].GetPreZ()) != Math.ceil(this.RoleList[RoleNum].getZ())) {
                     this.RoleList[RoleNum].setZ(Math.round(this.RoleList[RoleNum].getZ()));
                     this.RoleList[RoleNum].SetState("visible");
+                   // this.RoleList[RoleNum].ChangeViewScope(-this.RoleList[RoleNum].GetViewScope());
+                }
+                if(this.RoleList[RoleNum].getZ() - Math.floor(this.RoleList[RoleNum].getZ()) >= 0.5) {
+                    this.RoleList[RoleNum].SetViewScope(this.RoleList[RoleNum].GetOriginalViewScope() - (this.RoleList[RoleNum].GetOriginalViewScope()-1)*(2-2*(this.RoleList[RoleNum].getZ() - Math.floor(this.RoleList[RoleNum].getZ()))));
+                }
+                else {
+                    this.RoleList[RoleNum].SetViewScope(this.RoleList[RoleNum].GetOriginalViewScope() + 4*(this.RoleList[RoleNum].getZ() - Math.floor(this.RoleList[RoleNum].getZ())));
+                }
+                if(RoleNum == this.ViewRoleNum) {
+                    GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(this.RoleList[RoleNum].GetViewScope()));
                 }
             }
 
@@ -496,7 +523,7 @@ var Control = {
         check(this.HunterList);
 
         // 心跳音效
-        if(this.RoleList[this.ViewRoleNum].GetIdentity() == "TreasureHunter") {
+        if(this.RoleList[this.ViewRoleNum].GetID() == "TreasureHunter") {
             this.audio.muted = false;
             var distance = Infinity;
             var ShortestDistance = Infinity;
@@ -521,8 +548,10 @@ var Control = {
         else {
             this.audio.muted = true;
         }
+
+        // 遊戲結束方面
         if(this.PlayerRole.GetState() == "vanish") {
-            this.PlayerRole.SetViewScope((this.PlayerRole.GetViewScope()-progress > 0) ? this.PlayerRole.GetViewScope()-progress : 0);
+            this.PlayerRole.ChangeViewScope(-progress);
         }
         if(this.PlayerRole.GetViewScope() == 0) {
             this.GameOver = true;
@@ -538,7 +567,10 @@ var Control = {
         }
     },
 
-    UpdateGameProgress : function(timestamp) {
+    UpdateGameProgress : function(timestamp) {  
+        // console.log(this.RoleList[0].getX());
+        // console.log(this.RoleList[0].getY());
+        // console.log(this.RoleList[0].getZ());
         var progress = (timestamp - this.LastTimeStamp)/1000;
         this.LastTimeStamp = timestamp;
         if(++this.count < 2) {
@@ -557,7 +589,7 @@ var Control = {
         }
     },		
 
-    getState : function() {
+    GetState : function() {
         return this.state;
     },
 

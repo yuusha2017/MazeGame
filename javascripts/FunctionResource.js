@@ -11,7 +11,7 @@ function resize(){
     centerX = GC.width/2;
 	centerY = GC.height/2;
 	
-    switch(Control.getState()) {
+    switch(Control.GetState()) {
         case "GameMenuScene" : {
             GameMenuScene.RecreateMenuItems();
             GameMenuScene.render();
@@ -446,26 +446,11 @@ function GetAIAvailableInfo(AIRole, Roles, AIMaze) {
 		}
 	}
 
-	// AIRole.SetPreX(X);
-	// AIRole.SetPreY(Y);
-	// AIRole.SetPreZ(Z);
 	return Info;
 }
 
 // 這裡寫得不好
 function PositionCorrection(maze, Role) {
-	if(Role.getX() < 0) {
-		Role.setX(1);
-	}
-	if(Role.getY() < 0) {
-		Role.setY(1);
-	}
-	if(Role.getX()  > maze.length-1) {
-		Role.setX(maze.length-2);
-	}
-	if(Role.getY() > maze[Math.round(Role.getX())].length-1) {
-		Role.setY(maze[Math.round(Role.getX())].length-2);
-	}
 	if(maze[Math.floor(Role.getX())][Math.round(Role.getY())].object == "wall") {
 		Role.setX(Math.ceil(Role.getX()));
 	}
@@ -568,21 +553,6 @@ function LoadImage() {
 	silvercoin.src = "images\\SilverCoin.png";
 	bronzecoin.src = "images\\BronzeCoin.png";
 }
-
-// // 出口與寶藏與角色的位置初始化
-// function ObjectPositionInit(maze, RoleList) {
-// 	for(var RoleNum = 0; RoleNum < RoleList.length; ++RoleNum) {
-// 		PositionGenerator(maze, )
-// 		while(maze[RoleList[RoleNum].getZ()][RoleList[RoleNum].getX()][RoleList[RoleNum].getY()].object != "road") {
-// 			RoleList[RoleNum].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-// 		}
-// 		RoleList[RoleNum].SetPrePosition(RoleList[RoleNum].getX(), RoleList[RoleNum].getY(), RoleList[RoleNum].getZ());
-// 	}
-// 	WaitDrawObjects[0].SetPosition(RoleList[0].getX(), RoleList[0].getY(), RoleList[0].getZ());
-// 	do{
-// 		WaitDrawObjects[1].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-// 	}while(maze[WaitDrawObjects[1].getZ()][WaitDrawObjects[1].getX()][WaitDrawObjects[1].getY()].object != "road") 
-// }
 
 // 給定一位置與一迷宮平面, 判斷該位置是否在迷宮之外
 function IsOutOfMaze(maze, x, y) {
