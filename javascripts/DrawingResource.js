@@ -50,15 +50,9 @@ function BaseObj(argX, argY, argZ, ArgImg) {
 	var z = argZ;
 	var img = ArgImg;
 	var state = "visible";
-	this.getX = function() {
-		return x;
-	};
-	this.getY = function() {
-		return y;
-	};
-	this.getZ = function() {
-		return z;
-	};
+	this.getX = function() { return x; };
+	this.getY = function() { return y; };
+	this.getZ = function() { return z; };
 	this.GetImage = function() {
 		return img;
 	};

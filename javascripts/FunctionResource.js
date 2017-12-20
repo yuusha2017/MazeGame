@@ -1,3 +1,4 @@
+
 // 當使用者縮放視窗時呼叫此函式來維持繪製區域
 function resize(){
 	GameCanvas = document.getElementById("GameCanvas");
@@ -15,7 +16,7 @@ function resize(){
             GameMenuScene.RecreateMenuItems();
             GameMenuScene.render();
             break;
-        }
+		}
         case "GameScene" : {
 			GameScene.SetFixedSL((window.innerHeight*window.devicePixelRatio)/2/5);
 			GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(Control.PlayerRoleOriginalScope));

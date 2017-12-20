@@ -156,7 +156,7 @@ var Control = {
     },
     
     Single : function() {
-        this.LoadGameScene();
+        this.LoadGame();
     },
 
     Multiplayer : function() {
@@ -171,12 +171,7 @@ var Control = {
         window.close();
     },
 
-    LoadGameScene : function() {
-        this.state = "GameScene";
-
-        // 轉場效果
-        GCCT.globalAlpha = 0;
-        this.RequestID = requestAnimationFrame(this.transition1.bind(this));
+    LoadGame : function() {
 
         // 更新迷宮
         GameScene.UpdateMaze(OptionScene.GetMazeLength(), OptionScene.GetMazeWidth(), OptionScene.GetMazeHeight());
@@ -286,48 +281,8 @@ var Control = {
         GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(this.PlayerRole.GetViewScope()));
 
         // 遊戲開始
-        this.GameStart = true;
-        console.log(11111);
-        //this.StartGame();
-    },
-
-    transition1 : function(timestamp) {
-        console.log(this.count);
-        var alpha = GCCT.globalAlpha;
-        GCCT.globalAlpha = 1;
-        GameMenuScene.render();
-        GCCT.globalAlpha = alpha;
-        if(++this.count > 5) { 
-            var progress = (timestamp - this.LastTimeStamp)/1000;
-            GCCT.globalAlpha = (alpha + progress < 1) ? (alpha + progress) : 1; 
-            GCCT.fillStyle = "Black";
-            GCCT.fillRect(0,0,innerWidth,innerHeight);
-        }
-        this.LastTimeStamp = timestamp;
-        if(GCCT.globalAlpha == 1 && this.GameStart == true) {
-            this.RequestID = requestAnimationFrame(this.transition2.bind(this));
-        }
-        else {
-            this.RequestID = requestAnimationFrame(this.transition1.bind(this));
-        }
-    },
-
-    transition2 : function(timestamp) {
-        var progress = (timestamp - this.LastTimeStamp)/1000;
-        this.LastTimeStamp = timestamp;
-        var alpha = GCCT.globalAlpha;
-        GCCT.globalAlpha = 1;
-        GameScene.UpdateViewScope(this.PlayerRole);
-        GCCT.globalAlpha = (alpha - progress > 0) ? (alpha - progress) : 0; 
-        GCCT.fillStyle = "Black";
-        GCCT.fillRect(0,0,innerWidth,innerHeight);
-        if(GCCT.globalAlpha == 0) {
-            GCCT.globalAlpha = 1;
-            this.StartGame();
-        }
-        else {
-            this.RequestID = requestAnimationFrame(this.transition2.bind(this));
-        }
+        // 轉場效果
+        requestAnimationFrame(GameMenuScene.transition.bind(GameMenuScene));
     },
 
     LoadOptionScene : function() {
@@ -433,9 +388,8 @@ var Control = {
             }
         };
     },   
-    UpdateGameProgress : function(timestamp) {
-        var progress = (timestamp - this.LastTimeStamp)/1000;
-        this.LastTimeStamp = timestamp;
+
+    UpdateGameData : function(progress) {
         GameTime += progress;
         for(var i = 0; i <= WaitDrawObjects.length-1; ++i) { 
             WaitDrawObjects[i].update(progress);
@@ -501,29 +455,18 @@ var Control = {
             if(Math.round(this.RoleList[RoleNum].getX()) == this.RoleList[RoleNum].getX() && Math.round(this.RoleList[RoleNum].getY()) == this.RoleList[RoleNum].getY() && (this.RoleList[RoleNum].GetPreX() != this.RoleList[RoleNum].getX() || this.RoleList[RoleNum].GetPreY() != this.RoleList[RoleNum].getY()) && GameScene.maze[Math.round(this.RoleList[RoleNum].getZ())][this.RoleList[RoleNum].getX()][this.RoleList[RoleNum].getY()].object == "PassageUp" || this.RoleList[RoleNum].GetState() == "GoUp") {
                 this.RoleList[RoleNum].SetState("GoUp");
                 this.RoleList[RoleNum].setZ(this.RoleList[RoleNum].getZ() + 1/60);
-                if(RoleNum == this.ViewRoleNum) {
-                    GameScene.GoUpAnimationRequest = true;
-                }
                 if(Math.floor(this.RoleList[RoleNum].GetPreZ()) != Math.floor(this.RoleList[RoleNum].getZ())) {
                     this.RoleList[RoleNum].setZ(Math.round(this.RoleList[RoleNum].getZ()));
                     this.RoleList[RoleNum].SetState("visible");
-                    if(RoleNum == this.ViewRoleNum) {
-                        GameScene.GoUpAnimationRequest = false;
-                    }
+                    // this.RoleList[RoleNum].SetViewScope(this.Ori - (this.ViewScope-1)*(2-2*offsetZ));
                 }
             }
             else if(Math.round(this.RoleList[RoleNum].getX()) == this.RoleList[RoleNum].getX() && Math.round(this.RoleList[RoleNum].getY()) == this.RoleList[RoleNum].getY() && (this.RoleList[RoleNum].GetPreX() != this.RoleList[RoleNum].getX() || this.RoleList[RoleNum].GetPreY() != this.RoleList[RoleNum].getY()) && GameScene.maze[Math.round(this.RoleList[RoleNum].getZ())][this.RoleList[RoleNum].getX()][this.RoleList[RoleNum].getY()].object == "PassageDown" || this.RoleList[RoleNum].GetState() == "GoDown") {
                 this.RoleList[RoleNum].SetState("GoDown");
                 this.RoleList[RoleNum].setZ(this.RoleList[RoleNum].getZ() - 1/60);
-                if(RoleNum == this.ViewRoleNum) {
-                    GameScene.GoDownAnimationRequest = true;
-                }
                 if(Math.ceil(this.RoleList[RoleNum].GetPreZ()) != Math.ceil(this.RoleList[RoleNum].getZ())) {
                     this.RoleList[RoleNum].setZ(Math.round(this.RoleList[RoleNum].getZ()));
                     this.RoleList[RoleNum].SetState("visible");
-                    if(RoleNum == this.ViewRoleNum) {
-                        GameScene.GoDownAnimationRequest = false;
-                    }
                 }
             }
 
@@ -578,30 +521,38 @@ var Control = {
         else {
             this.audio.muted = true;
         }
+        if(this.PlayerRole.GetState() == "vanish") {
+            this.PlayerRole.SetViewScope((this.PlayerRole.GetViewScope()-progress > 0) ? this.PlayerRole.GetViewScope()-progress : 0);
+        }
+        if(this.PlayerRole.GetViewScope() == 0) {
+            this.GameOver = true;
+        }
+
+        // FPS計算
+        ++CalFPS;
+        TimeElapsed += progress;
+        if(TimeElapsed > 0.5) {
+            FPS = Math.round(CalFPS/TimeElapsed);
+            CalFPS = 0;
+            TimeElapsed = 0;
+        }
+    },
+
+    UpdateGameProgress : function(timestamp) {
+        var progress = (timestamp - this.LastTimeStamp)/1000;
+        this.LastTimeStamp = timestamp;
+        if(++this.count < 2) {
+            requestAnimationFrame(this.UpdateGameProgress.bind(this));
+            return;
+        }
+        this.UpdateGameData(progress);
+        GameScene.UpdateViewScope(this.PlayerRole);
 
         // 結束遊戲或下一幀
         if(this.GameOver == true) {
             this.EndGame();
         }
         else {
-            if(this.PlayerRole.GetState() == "vanish") {
-                this.PlayerRole.SetViewScope((this.PlayerRole.GetViewScope()-progress > 0) ? this.PlayerRole.GetViewScope()-progress : 0);
-            }
-            if(this.PlayerRole.GetViewScope() == 0) {
-                this.GameOver = true;
-            }
-            // console.time('GameScene.UpdateViewScope');
-            GameScene.UpdateViewScope(this.PlayerRole);
-            // console.timeEnd('GameScene.UpdateViewScope');
-
-            // FPS計算
-            ++CalFPS;
-            TimeElapsed += progress;
-            if(TimeElapsed > 0.5) {
-                FPS = Math.round(CalFPS/TimeElapsed);
-                CalFPS = 0;
-                TimeElapsed = 0;
-            }
             requestAnimationFrame(this.UpdateGameProgress.bind(this));
         }
     },		
@@ -637,7 +588,8 @@ var Control = {
         this.exit = {};
         this.treasure = {};
         this.LastTimeStamp = 0;
-        this.ViewRoleNum = 0;               
+        this.ViewRoleNum = 0;     
+        this.count = 0;          
         GameTime = 0;
         minute = "00";
         second = "00";
@@ -648,3 +600,4 @@ var Control = {
         AngleOffset = 0;
     }
 }
+    
