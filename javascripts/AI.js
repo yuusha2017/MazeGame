@@ -1,7 +1,25 @@
-﻿// 遊戲的簡易AI
-function AI(name, role) {
+﻿// 鍵位定義
+var NoKey = 0;
+var KeyDown = 1;
+var KeyRight = 2;
+var KeyUp = 4;
+var KeyLeft = 8;
+var KeyD = 16
+var KeyF = 32;
+var KeyQ = 64;
+var KeyW = 128;
+var AllKey = KeyDown + KeyRight + KeyUp + KeyLeft + KeyD + KeyF + KeyQ + KeyW;   // Number.MAX_SAFE_INTEGER; (IE不支援QAQ)
+var offset = 0.000001;
+var BorderTolerance = 0.2;      		// 需>=最高移動速度/60
+// 隨機生成min到max之間(含)的整數
+function RandomNum(min, max) {									
+	return Math.floor( Math.random()*(max-min+1) ) + min;
+}
+
+// 遊戲的簡易AI
+function AI(name) {
     this.name = name;
-    this.role = role;
+    // this.role = role;            // 待解決
     this.Memory_OtherPlayers = [];
     this.Memory_Maze = []; 
     this.Memory_PreAction = "";
@@ -540,7 +558,7 @@ function AI(name, role) {
         this.Strategy = NextStrategyList[RandomNum(0,NextStrategyList.length-1)].Strategy;
         // console.log(this.Strategy);
     };
-      this.times = 0;
+    // this.times = 0;
 	this.ActionThinking = function() {
     //  if(this.times++%60 == 0) {
     //     console.log(this.RoleInitialX);
@@ -578,7 +596,7 @@ function AI(name, role) {
                 break;
             }
         }
-        // console.log(NextActionList[0]);
+        console.log(NextActionList[0]);
         switch(NextActionList[RandomNum(0,NextActionList.length-1)].Action) {
             case "MoveLeft" : {
                 this.Action_Release_AllKey();
@@ -626,9 +644,19 @@ function AI(name, role) {
 };
 
 var me = {};
+var Interval1;
+var Interval2;
 onmessage = function(e) {
-    me = new AI(e.name, e.role);
+    me = new AI(e.data.name);
+    me.Info_Init(e.data.length);
     onmessage = function(e) {
-        
+        me.CollectInfo(e.data);
+        me.StrategyThinking();
+        me.ActionThinking();
+        postMessage(me.GetKeyboardState());
+        // console.log(performance.now());
     }
+    // Interval1 = setInterval(me.StrategyThinking.bind(me), 1000);
+    // Interval2 = setInterval(me.ActionThinking.bind(me), 50);
 }
+

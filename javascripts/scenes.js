@@ -394,7 +394,7 @@ var GameScene = {
 
 	// 開始轉場
 	transition : function(timestamp) {
-        GameScene.UpdateViewScope(Control.PlayerRole);
+        GameScene.UpdateViewScope(Control.RoleList[Control.ViewRoleNum]);
         GCCT.fillStyle = "RGBA(0,0,0,"+this.alpha+")";
         GCCT.fillRect(0,0,innerWidth,innerHeight);
         if(++this.count > 2) { 
@@ -621,8 +621,10 @@ var GameScene = {
 				second = (Math.floor(GameTime)%60 < 10) ? ("0" + Math.floor(GameTime)%60) : (Math.floor(GameTime)%60);
 				GCCT.strokeText("Time : " + minute + ":" + second, 0, 40);
 	
-				// 繪製分數
-				GCCT.strokeText("Score : " + (role.GetMoney()), 0, 80);
+				if(role.GetID() == "TreasureHunter") {
+					// 繪製分數
+					GCCT.strokeText("Score : " + (role.GetMoney()), 0, 80);
+				}
 			}
 		}
 		GCCT.restore();

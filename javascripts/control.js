@@ -45,6 +45,7 @@ var Control = {
     PlayerRole : {},
     AIMaze : [],
     AIList : [],
+    AIPlayer : [],
     ItemMap : [],
     exit : {},
     treasure : {},
@@ -52,7 +53,7 @@ var Control = {
     LastTimeStamp : 0,
     count : 0,
     AINumber : 1,
-    ViewRoleNum : 0,                    // 觀賞哪個角色視角
+    ViewRoleNum : 1,                    // 觀賞哪個角色視角
 
     start : function() {
         this.LoadGameMenuScene ();
@@ -181,9 +182,6 @@ var Control = {
 
     LoadGame : function() {
 
-        m = new Worker("javascripts\\test.js");
-        m.postMessage(2);
-        m.postMessage(3);
         // 地圖xyz限制更新
         maxX = (2*OptionScene.GetMazeLength()+1)-2;
         maxY = (2*OptionScene.GetMazeWidth()+1)-2;
@@ -217,11 +215,24 @@ var Control = {
         // AI與AI角色
         for(var AINum = 0; AINum < this.AINumber; ++AINum) {
             this.RoleList.push(new Wolf(1,1,0));
-            this.AIList.push(new AI("AI"+(AINum+1), this.RoleList[AINum+1]));
+            this.AIList.push(new Worker("javascripts\\AI.js"));
+            this.AIPlayer.push(new Player("Player"+(AINum+2), this.RoleList[AINum+1]));
+        }
+        for(var AINum = 0; AINum < this.AINumber; ++AINum) {
+            this.AIList[AINum].postMessage({name : "AI"+(AINum+1), 
+                                            length : this.RoleList.length-1,});
+        }
+        
+        function temp(AINum) {
+            return function(e, AInum) {this.AIPlayer[AINum].SetKeyboardState(e.data);};
+        }
+        for(var AINum = 0; AINum < this.AINumber; ++AINum) {
+            this.AIList[AINum].onmessage = temp(AINum).bind(this);
         }
         for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
-            this.RoleList[AINum+1].SetOperator(this.AIList[AINum]);
+            this.RoleList[AINum+1].SetOperator(this.AIPlayer[AINum]);
         }
+
         // 進行角色分類
         for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
             if(this.RoleList[RoleNum].GetID() == "TreasureHunter") {
@@ -231,14 +242,17 @@ var Control = {
                 this.DefenderList.push(this.RoleList[RoleNum]);
             }
         }
+
         // AI用迷宮
         for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
             this.AIMaze.push(MazeCopier(GameScene.maze));
         }
+
         // AI資訊初始化
-        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
-            this.AIList[AINum].Info_Init(this.RoleList.length-1);
-        }
+        // for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
+        //     this.AIList[AINum].Info_Init(this.RoleList.length-1);
+        // }
+
         // 角色位置初始化
         for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
             var position = PositionGenerator(GameScene.maze, WaitDrawObjects, 10);
@@ -410,13 +424,13 @@ var Control = {
         for(var i = 0; i <= WaitDrawObjects.length-1; ++i) { 
             WaitDrawObjects[i].update(progress);
         }
-        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
-            this.AIList[AINum].StrategyThinking();
-         }
-        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
-            this.AIList[AINum].CollectInfo(GetAIAvailableInfo(this.AIList[AINum].GetRole(), this.RoleList, this.AIMaze[AINum]));
-            this.AIList[AINum].ActionThinking();
-        }
+        // for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
+        //     this.AIList[AINum].StrategyThinking();
+        //  }
+        // for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
+        //     this.AIList[AINum].CollectInfo(GetAIAvailableInfo(this.AIList[AINum].GetRole(), this.RoleList, this.AIMaze[AINum]));
+        //     this.AIList[AINum].ActionThinking();
+        // }
         for(var RoleNum = 0; RoleNum < this.RoleList.length; ++RoleNum) {
             for(var ItemNum = 0; ItemNum <= 7; ++ItemNum) {
                 if(this.RoleList[RoleNum].GetItem(ItemNum) != "NoItem") {
@@ -578,7 +592,10 @@ var Control = {
             return;
         }
         this.UpdateGameData(progress);
-        GameScene.UpdateViewScope(this.PlayerRole);
+        for(var AINum = 0; AINum < this.AIList.length; ++AINum) {
+            this.AIList[AINum].postMessage(GetAIAvailableInfo(this.AIPlayer[AINum].role, this.RoleList, this.AIMaze[AINum]));
+        }
+        GameScene.UpdateViewScope(this.RoleList[this.ViewRoleNum]);
 
         // 結束遊戲或下一幀
         if(this.GameOver == true) {
@@ -616,6 +633,7 @@ var Control = {
         this.DefenderList = [];
         this.ItemMap = [];
         this.AIList = [];
+        this.AIPlayer = [];
         this.AIMaze = [];
         this.exit = {};
         this.treasure = {};
@@ -632,4 +650,3 @@ var Control = {
         AngleOffset = 0;
     }
 }
-    

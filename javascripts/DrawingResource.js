@@ -328,7 +328,7 @@ function Sheep(argX, argY, argZ) {
 
 // 角色" "結構
 function Wolf(argX, argY, argZ) {
-	Defender.call(this, argX, argY, argZ, wolf, 5, 4, 20, 20, "TreasureDefender", flash, flash);
+	Defender.call(this, argX, argY, argZ, wolf, 7, 4, 20, 20, "TreasureDefender", flash, flash);
 	var SpeedTime = 5;							// 技能1的加速時間
 	var BurstSpeedTime = 2;						// 技能1的爆發加速時間
 	var SkillSpeed = 2;							// 技能1的加速值
