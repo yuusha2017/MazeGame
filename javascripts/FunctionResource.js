@@ -1,57 +1,45 @@
-var NoKey = 0;
-var KeyDown = 1;
-var KeyRight = 2;
-var KeyUp = 4;
-var KeyLeft = 8;
-var KeyD = 16
-var KeyF = 32;
-var KeyQ = 64;
-var KeyW = 128;
-var AllKey = KeyDown + KeyRight + KeyUp + KeyLeft + KeyD + KeyF + KeyQ + KeyW;   // Number.MAX_SAFE_INTEGER; (IE不支援QAQ)
+
 // 當使用者縮放視窗時呼叫此函式來維持繪製區域
 function resize(){
 	GameCanvas = document.getElementById("GameCanvas");
     GameCanvas.width = window.innerWidth;
 	GameCanvas.height = window.innerHeight;
     GC = GameCanvas;
-    GCCT = GC.getContext("2d");
+	GCCT = GC.getContext("2d");
+	GCCT.lineWidth = 2;
+	GCCT.font = "40px verdana";
     centerX = GC.width/2;
 	centerY = GC.height/2;
 	
-    switch(Control.getState()) {
+    switch(Control.GetState()) {
         case "GameMenuScene" : {
             GameMenuScene.RecreateMenuItems();
             GameMenuScene.render();
             break;
-        }
+		}
         case "GameScene" : {
+			GameScene.SetFixedSL((window.innerHeight*window.devicePixelRatio)/2/5);
+			GameScene.SetSL(4*(window.innerHeight*window.devicePixelRatio)/2/5/(Control.PlayerRoleOriginalScope));
 			GameScene.AllBlack();
-            GameScene.UpdateViewScope(Control.RoleList[0]);
+            GameScene.UpdateViewScope(Control.PlayerRole);
             break;
 		}
+		case "SelectScene" : {
+			SelectScene.RecreateMenuItems();
+            SelectScene.render();
+            break;
+		}
+		case "RoleSelectScene" : {
+            RoleSelectScene.render();
+            break;
+		}
+		case "ItemSelectScene" : {
+			ItemSelectScene.render();
+			break;
+		}
 		case "OptionScene" : {
-			if(OptionScene.GetState() == "OptionSelect") {
-				OptionScene.RecreateMenuItems();
-				OptionScene.render();
-			}
-			else if(OptionScene.GetState() == "MazeLengthSetting") {
-				OptionScene.RecreateMenuItems();
-				OptionScene.render();
-				OptionScene.ClearMenuItem(0);
-				OptionScene.OnMazeLengthSelect();
-			}
-			else if(OptionScene.GetState() == "MazeWidthSetting") {
-				OptionScene.RecreateMenuItems();
-				OptionScene.render();
-				OptionScene.ClearMenuItem(1);
-				OptionScene.OnMazeWidthSelect();
-			}
-			else if(OptionScene.GetState() == "MazeHeightSetting") {
-				OptionScene.RecreateMenuItems();
-				OptionScene.render();
-				OptionScene.ClearMenuItem(2);
-				OptionScene.OnMazeHeightSelect();
-			}
+			OptionScene.RecreateMenuItems();
+			OptionScene.render();
 			break;
 		}
         default : {
@@ -61,10 +49,10 @@ function resize(){
 }
 
 // 選單項目生成
-function MenuItem(name, positionX, positionY) {
-	this.name = name;
-	this.positionX = positionX;
-	this.positionY = positionY;
+function MenuItem(ArgName, ArgX, ArgY) {
+	this.name = ArgName;
+	this.x = ArgX;
+	this.y = ArgY;
 }
 
 // 隨機生成min到max之間(含)的整數
@@ -74,7 +62,7 @@ function RandomNum(min, max) {
 
 // 判斷兩物件間是否互相接觸
 function ReachDetermination(objectA, objectB) {								
-	if(objectA.getZ() == objectB.getZ() && Math.abs( (objectA.getX() - objectB.getX()) ) <= 0.5 && Math.abs( (objectA.getY() - objectB.getY()) ) <= 0.5) {
+	if(Math.abs(objectA.getZ() - objectB.getZ()) <= 0.1 && Math.abs( (objectA.getX() - objectB.getX()) ) <= 0.5 && Math.abs( (objectA.getY() - objectB.getY()) ) <= 0.5) {
 		return true;
 	}
 	else {
@@ -82,198 +70,22 @@ function ReachDetermination(objectA, objectB) {
 	}
 }
 
-// 暫不支援z軸
-// function ThickWallMazeGenerator(dimensionX, dimensionY) {
-// 	var maze = [];
-// 	for(var x = 0; x <= dimensionX+1; ++x) {
-// 		maze.push([]);
-// 		for(var y = 0; y <= dimensionY+1; ++y) {	
-// 			maze[x].push({passed : false, top : false, right : false, object : "unknown"});
-// 		}
-// 	}
-// 	ThickWallMazeGeneratorGo(maze, RandomNum(1, dimensionX-2), RandomNum(1, dimensionY-2) );
-// 	for(var x = 0; x <=dimensionX+1; ++x) {
-// 		for(var y = 0; y <= dimensionY+1; ++y) {
-// 			maze[x][y].object = maze[x][y].passed == true ? "road" : "wall";
-// 		}
-// 	}
-// 	return maze;
-// }
-
 // 複製迷宮
 function MazeCopier(maze) {
 	var maze2 = [];
-	for(var z = 0; z <= maze.length-1; ++z) {
+	for(var z = 0; z < maze.length; ++z) {
 		maze2.push(maze[z].map( function(arr) { return JSON.parse(JSON.stringify(arr)); } ));
 	}
-	for(var z = 0; z <=maze2.length-1; ++z) {
-		for(var x = 0; x <=maze2[z].length-1; ++x) {
-			for(var y = 0; y <= maze2[z][x].length-1; ++y) {
-			maze2[z][x][y].passed = false;
-			maze2[z][x][y].passtimes = 0;
+	for(var z = 0; z < maze2.length; ++z) {
+		for(var x = 0; x < maze2[z].length; ++x) {
+			for(var y = 0; y < maze2[z][x].length; ++y) {
+				maze2[z][x][y].passed = false;
+				maze2[z][x][y].passtimes = 0;
 			}
 		}
 	}
 	return maze2;
 }
-
-// 暫不支援z軸
-// function ThickWallMazeGeneratorGo(maze, x, y) {
-// 	maze[x][y].passed = true;
-// 	var direction = RandomNum(1,4);
-// 	for(var i = 0; i <= 3; ++i) {
-// 		switch(direction) {
-// 			case 1: {
-// 				if(y == 2 || (y > 2 && (maze[x][y-3].passed == true || maze[x-1][y-3].passed == true || maze[x+1][y-3].passed == true))) {
-// 					if(maze[x][y-1].passed == false && maze[x-1][y-1].passed == false && maze[x+1][y-1].passed == false
-// 						&&maze[x][y-2].passed == false && maze[x-1][y-2].passed == false && maze[x+1][y-2].passed == false) {
-// 							maze[x][y].top = true;
-// 							ThickWallMazeGeneratorGo(maze, x, y-1);	
-// 					}
-// 				}
-// 				else if(y != 1 && y != 2) {
-// 					if(maze[x][y-1].passed == false && maze[x-1][y-1].passed == false && maze[x+1][y-1].passed == false
-// 					&&maze[x][y-2].passed == false && maze[x-1][y-2].passed == false && maze[x+1][y-2].passed == false) {
-// 						maze[x][y].top = true;
-// 						maze[x][y-1].top = true;
-// 						maze[x][y-1].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x, y-2);	
-// 					}
-// 				}
-// 				++direction;
-// 				break;
-// 			}
-
-// 			case 2: { 
-// 				if(x == maze.length - 3 || (x < maze.length-3 && (maze[x+3][y].passed == true || maze[x+3][y-1].passed == true || maze[x+3][y+1].passed == true) ) ) {
-// 					if(maze[x+1][y].passed == false && maze[x+1][y-1].passed == false && maze[x+1][y+1].passed == false 
-// 						&&maze[x+2][y].passed == false && maze[x+2][y-1].passed == false && maze[x+2][y+1].passed == false) {
-// 							maze[x][y].right = true;
-// 							ThickWallMazeGeneratorGo(maze, x+1, y); 
-// 					}
-// 				}
-// 				else if(x != maze.length - 2 && x != maze.length - 3) {
-// 					if(maze[x+1][y].passed == false && maze[x+1][y-1].passed == false && maze[x+1][y+1].passed == false 
-// 					&&maze[x+2][y].passed == false && maze[x+2][y-1].passed == false && maze[x+2][y+1].passed == false) {
-// 						maze[x][y].right = true;
-// 						maze[x+1][y].right = true;
-// 						maze[x+1][y].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x+2, y); 
-// 					}
-// 				}
-// 				++direction;
-// 				break;
-// 			}
-			
-// 			case 3: {
-// 				if(y == maze[x].length - 3 || (y < maze[x].length-3 && ( maze[x][y+3].passed == true || maze[x-1][y+3].passed == true || maze[x+1][y+3].passed == true ) ) ) {
-// 					if(maze[x][y+1].passed == false && maze[x-1][y+1].passed == false && maze[x+1][y+1].passed == false 
-// 						&&maze[x][y+2].passed == false && maze[x-1][y+2].passed == false && maze[x+1][y+2].passed == false) {
-// 							maze[x][y+1].top = true;
-// 							ThickWallMazeGeneratorGo(maze, x, y+1); 
-// 					}
-// 				}
-// 				else if(y != maze[x].length - 2 && y != maze[x].length - 3) {
-// 					if(maze[x][y+1].passed == false && maze[x-1][y+1].passed == false && maze[x+1][y+1].passed == false 
-// 					&&maze[x][y+2].passed == false && maze[x-1][y+2].passed == false && maze[x+1][y+2].passed == false) {
-// 						maze[x][y+1].top = true;
-// 						maze[x][y+2].top = true;
-// 						maze[x][y+1].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x, y+2); 
-// 					}
-// 				}
-// 				++direction;
-// 				break;
-// 			}
-			
-// 			case 4: {
-// 				if(x == 2 || (x > 2 && (maze[x-3][y].passed == true || maze[x-3][y-1].passed == true || maze[x-3][y+1].passed == true))) {
-// 					if(maze[x-1][y].passed == false && maze[x-1][y-1].passed == false && maze[x-1][y+1].passed == false
-// 						&&maze[x-2][y].passed == false && maze[x-2][y-1].passed == false && maze[x-2][y+1].passed == false) {
-// 							maze[x-1][y].right = true;
-// 							ThickWallMazeGeneratorGo(maze, x-1, y); 
-// 					}
-// 				}
-// 				else if(x != 1 && x != 2) {
-// 					if(maze[x-1][y].passed == false && maze[x-1][y-1].passed == false && maze[x-1][y+1].passed == false
-// 					&&maze[x-2][y].passed == false && maze[x-2][y-1].passed == false && maze[x-2][y+1].passed == false) {
-// 						maze[x-1][y].right = true;
-// 						maze[x-2][y].right = true;
-// 						maze[x-1][y].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x-2, y); 
-// 					}
-// 				}
-// 				++direction;
-// 				break;
-// 			}
-			
-// 			case 5: {
-// 				if(y == 2 || (y > 2 && (maze[x][y-3].passed == true || maze[x-1][y-3].passed == true || maze[x+1][y-3].passed == true))) {
-// 					if(maze[x][y-1].passed == false && maze[x-1][y-1].passed == false && maze[x+1][y-1].passed == false
-// 						&&maze[x][y-2].passed == false && maze[x-1][y-2].passed == false && maze[x+1][y-2].passed == false) {
-// 							maze[x][y].top = true;
-// 							ThickWallMazeGeneratorGo(maze, x, y-1);	
-// 					}
-// 				}
-// 				else if(y != 1 && y != 2) {
-// 					if(maze[x][y-1].passed == false && maze[x-1][y-1].passed == false && maze[x+1][y-1].passed == false
-// 					&&maze[x][y-2].passed == false && maze[x-1][y-2].passed == false && maze[x+1][y-2].passed == false) {
-// 						maze[x][y].top = true;
-// 						maze[x][y-1].top = true;
-// 						maze[x][y-1].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x, y-2);	
-// 					}
-// 				}
-// 				++direction;
-// 				break;
-// 			}
-			
-// 			case 6: {
-// 				if(x == maze.length - 3 || (x < maze.length-3 && (maze[x+3][y].passed == true || maze[x+3][y-1].passed == true || maze[x+3][y+1].passed == true) ) ) {
-// 					if(maze[x+1][y].passed == false && maze[x+1][y-1].passed == false && maze[x+1][y+1].passed == false 
-// 						&&maze[x+2][y].passed == false && maze[x+2][y-1].passed == false && maze[x+2][y+1].passed == false) {
-// 							maze[x][y].right = true;
-// 							ThickWallMazeGeneratorGo(maze, x+1, y); 
-// 					}
-// 				}
-// 				else if(x != maze.length - 2 && x != maze.length - 3) {
-// 					if(maze[x+1][y].passed == false && maze[x+1][y-1].passed == false && maze[x+1][y+1].passed == false 
-// 					&&maze[x+2][y].passed == false && maze[x+2][y-1].passed == false && maze[x+2][y+1].passed == false) {
-// 						maze[x][y].right = true;
-// 						maze[x+1][y].right = true;
-// 						maze[x+1][y].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x+2, y); 
-// 					}
-// 				}
-// 				++direction;
-// 				break;
-// 			}
-			
-// 			case 7: {
-// 				if(y == maze[x].length - 3 || (y < maze[x].length-3 && ( maze[x][y+3].passed == true || maze[x-1][y+3].passed == true || maze[x+1][y+3].passed == true ) ) ) {
-// 					if(maze[x][y+1].passed == false && maze[x-1][y+1].passed == false && maze[x+1][y+1].passed == false 
-// 						&&maze[x][y+2].passed == false && maze[x-1][y+2].passed == false && maze[x+1][y+2].passed == false) {
-// 							maze[x][y+1].top = true;
-// 							ThickWallMazeGeneratorGo(maze, x, y+1); 
-// 					}
-// 				}
-// 				else if(y != maze[x].length - 2 && y != maze[x].length - 3) {
-// 					if(maze[x][y+1].passed == false && maze[x-1][y+1].passed == false && maze[x+1][y+1].passed == false 
-// 					&&maze[x][y+2].passed == false && maze[x-1][y+2].passed == false && maze[x+1][y+2].passed == false) {
-// 						maze[x][y+1].top = true;
-// 						maze[x][y+2].top = true;
-// 						maze[x][y+1].passed = true;
-// 						ThickWallMazeGeneratorGo(maze, x, y+2); 
-// 					}
-// 				}
-// 				break;
-// 			}
-// 			default: {
-// 				break;
-// 			}
-// 		}
-// 	}
-// }
 
 function ThinWallMazeGenerator(dimensionX, dimensionY, dimensionZ) {
 	var maze = [];
@@ -290,7 +102,7 @@ function ThinWallMazeGenerator(dimensionX, dimensionY, dimensionZ) {
 	for(var z = 0; z < dimensionZ; ++z) {
 		ThinWallMazeGo(maze[z], RandomNum(0, dimensionX-1), RandomNum(0, dimensionY-1) );
 	}
-	console.log(maze);
+	// console.log(maze);
 	return maze;
 }
 
@@ -298,7 +110,7 @@ function ThinWallMazeGenerator(dimensionX, dimensionY, dimensionZ) {
 function ThinWallMazeGo(maze, x, y) {
 	maze[x][y].passed = true;
 	var direction = RandomNum(1,4);
-	for(var i = 0; i <= 3; ++i) {
+	for(var i = 0; i <= 3; ++i) {						// 因遞迴關係，變數不可用全域i
 		switch(direction) {
 			case 1: {
 				if(y == 0) {
@@ -400,13 +212,13 @@ function ThinWallMazeGo(maze, x, y) {
 
 function ThinWallMazeToThickWallMazeConverter(ThinWallMaze) {
 	var ThickWallMaze = [];
-	for(var z = 0; z <= ThinWallMaze.length-1; ++z) {
+	for(var z = 0; z < ThinWallMaze.length; ++z) {
 		ThickWallMaze.push([]);
 		ThickWallMaze[z].push([]);
 		for(var y = 0; y <= 2*ThinWallMaze[z][0].length; ++y) {
 			ThickWallMaze[z][0].push({passed : false, object : "wall"});
 		}
-		for(var x = 0; x <= ThinWallMaze[z].length-1; ++x) {
+		for(var x = 0; x < ThinWallMaze[z].length; ++x) {
 			ThickWallMaze[z].push([]);
 			ThickWallMaze[z].push([]);
 			for(var y = 0; y <= ThinWallMaze[z][x].length-1; ++y) {
@@ -449,10 +261,11 @@ function MazePassageGenerator(maze) {
 	var position = [];
 	var position2 = [];
 	var check = true;
-	for(var z = 1; z <= maze.length-1; ++z) {
+	for(var z = 1; z < maze.length; ++z) {
 		position = position2;
 		position2 = [];
-		number = RandomNum(10, 15);
+		number = RandomNum(Math.round(maze[z].length*maze[z][0].length/100), Math.round(maze[z].length*maze[z][0].length/50));
+		// number = 0;
 		for(var i = 0; i < number; ++i) {
 			do {
 				x = RandomNum(0, maze[z].length-1);
@@ -517,18 +330,73 @@ function MazePassageGenerator(maze) {
 	}
 }
 
+function MazeToImg(maze) {
+	var MazeImg = [];
+	for(var z = 0; z < maze.length; ++z) {
+		MazeImg.push([])
+		for(var x = 0; x < maze[z].length; ++x) {
+			MazeImg[z].push([]);
+			for(var y = 0; y < maze[z][x].length; ++y) {
+				if(y == maze[z][x].length-1 && x >= 0 && x < maze[z].length) {
+					MazeImg[z][x].push(WallOutOfMaze);
+				}
+				else if(maze[z][x][y].object == "wall") {
+					if(y + 1 == maze[z][x].length || maze[z][x][y+1].object == "wall") {
+						MazeImg[z][x].push(MazeWall);
+					}
+					else {
+						MazeImg[z][x].push(MazeFrontWall);
+					}
+				}
+				else if(maze[z][x][y].object == "PassageDown") {
+					if(maze[z][x][y-1].object != "wall") {
+						MazeImg[z][x].push(MazeWallDownPassageDown);
+					}
+					else if(maze[z][x+1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallLeftPassageDown);
+					}
+					else if(maze[z][x][y+1].object != "wall") {
+						MazeImg[z][x].push(MazeWallUpPassageDown);
+					}
+					else if(maze[z][x-1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallRightPassageDown);							
+					}
+				}
+				else if(maze[z][x][y].object == "PassageUp" ) {
+					if(maze[z][x][y-1].object != "wall") {
+						MazeImg[z][x].push(MazeWallDownPassageUp);
+					}
+					else if(maze[z][x+1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallLeftPassageUp);
+					}
+					else if(maze[z][x][y+1].object != "wall") {
+						MazeImg[z][x].push(MazeWallUpPassageUp);
+					}
+					else if(maze[z][x-1][y].object != "wall") {
+						MazeImg[z][x].push(MazeWallRightPassageUp);							
+					}
+				}
+				else {
+					if(maze[z][x][y-1].object == "wall") {
+						MazeImg[z][x].push(MazeWallFloor);
+					}
+					else {
+						MazeImg[z][x].push(MazeFloor);
+					}
+				}
+			}
+		}
+	}
+	return MazeImg;
+}
+
 // 建立玩家物件
 function Player(name, role) {
 	this.KeyboardState = NoKey;
-	this.KeyboardSetting = {KeyLeft : role.MoveLeft.bind(role), KeyUp : role.MoveUp.bind(role), KeyRight : role.MoveRight.bind(role), KeyDown : role.MoveDown.bind(role),
-		KeyD : role.Skill1.bind(role), KeyF : role.Skill2.bind(role)};			// 在此環境下呼叫role的函數將導致該function內的this綁定KeyboardSetting物件，須重新修正
 	this.name = name;
 	this.role = role;
 	this.GetKeyboardState = function() {
 		return this.KeyboardState;
-	};
-	this.GetKeyboardSetting = function() {
-		return this.KeyboardSetting;
 	};
 	this.GetName = function() {
 		return this.name;
@@ -541,147 +409,61 @@ function Player(name, role) {
 	};
 }
 
-// AI維修中
-// function GetAIAvailableInformation(AIRole, Roles, AIMaze) {
-// 	var Information = {ChangeOfPositionX : AIRole.getX() - AIRole.GetPreX(), ChangeOfPositionY : AIRole.getY() - AIRole.GetPreY(), Maze : [], OtherPlayers : []};
-// 	for(var x = -Math.floor(AIRole.GetViewScope())+1; x <= Math.floor(AIRole.GetViewScope())-1; ++x) {
-// 		Information.Maze.push([]);
-// 		for(var y = -Math.floor(AIRole.GetViewScope())+1; y <= Math.floor(AIRole.GetViewScope())-1; ++y) {
-// 			if(Math.round(AIRole.getX()) + x < 0 || Math.round(AIRole.getY()) + y  < 0 || Math.round(AIRole.getX()) + x > AIMaze[0].length - 1 || Math.round(AIRole.getY()) + y > AIMaze[0][Math.round(AIRole.getX()) + x].length - 1) {
-// 				Information.Maze[x + Math.floor(AIRole.GetViewScope()) - 1].push("Border");
-// 			}
-// 			else {
-// 				Information.Maze[x + Math.floor(AIRole.GetViewScope()) - 1].push(AIMaze[Math.round(AIRole.getZ())][Math.round(AIRole.getX()) + x][Math.round(AIRole.getY()) + y]);
-// 			}
-// 		}
-// 	}
-// 	for(var PlayerNumber = 0; PlayerNumber <= Roles.length-1; ++PlayerNumber) {
-// 		if(AIRole != Roles[PlayerNumber] ){
-// 			if(Math.floor(AIRole.GetViewScope())-1 > Math.sqrt(Math.pow(AIRole.getX() - Roles[PlayerNumber].getX(), 2) + Math.pow(AIRole.getY() - Roles[PlayerNumber].getY(), 2)) ) {
-// 				Information.OtherPlayers.push({Name : Roles[PlayerNumber].GetOperator().GetName(), 
-// 																	RelativePositionX : Roles[PlayerNumber].getX() - AIRole.getX(), 
-// 																	RelativePositionY : Roles[PlayerNumber].getY() - AIRole.getY()});
-// 			}
-// 			else {
-// 				Information.OtherPlayers.push({Name : Roles[PlayerNumber].GetOperator().GetName(),
-// 																	RelativePositionX : "unknown",
-// 																	RelativePositionY : "unknown"});
-// 			}
-// 		}
-// 	}
-// 	AIRole.SetPreX(AIRole.getX());
-// 	AIRole.SetPreY(AIRole.getY());
-// 	return Information;
-// }
+function GetAIAvailableInfo(AIRole, Roles, AIMaze) {
 
-/*
-function MoveLeftUp(Role) {
-	if(GameScene.GetMaze()[Math.floor(Role.getX()-offset)+1][Math.round(Role.getY())].object == "road"
-	&& Math.abs(Math.round(Role.getY()) - Role.getY()) <= BorderTolerance) {
-		Role.MoveLeft(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.floor(Role.getX()-offset)+1][Math.round(Role.getY())].object == "wall") {
-			Role.setX(Math.ceil(Role.getX()-offset));
-		}
-	}
-	else {
-		Role.setX(Math.round(Role.getX()));
-	}
-	if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY())-1].object == "road"
-	&& Math.abs(Math.round(Role.getX()) - Role.getX()) <= BorderTolerance) {
-		Role.MoveUp(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY())-1].object== "wall") {
-			Role.setY( Math.ceil( Role.getY()));
-		}
-	}
-	else {
-		Role.setY(Math.round(Role.getY()));
-	}
-}
+	// 儲存、簡化常用變數
+	var X = AIRole.getX();
+	var Y = AIRole.getY();
+	var Z = AIRole.getZ();
+	var IntX = Math.round(X);	
+	var IntY = Math.round(Y);
+	var IntZ = Math.round(Z);
+	var offsetX = X - IntX;
+	var offsetY = Y - IntY;
+	var ViewScope = AIRole.GetViewScope();
+	var ViewableGrid = ViewScope - 0.5;		// 角色在格子正中間的可視半徑內的其它格子數
+	var Info = {ChangeOfX : X - AIRole.GetPreX(), ChangeOfY : Y - AIRole.GetPreY(), 
+				ChangeOfZ : Z - AIRole.GetPreZ(), Maze : [], OtherPlayers : [],
+				MazeInfoCenterX : Math.round(ViewableGrid - offsetX),
+				MazeInfoCenterY : Math.round(ViewableGrid - offsetY)};
 
-function MoveRightUp(Role) {
-	if(GameScene.GetMaze()[Math.floor(Role.getX())+1][Math.round(Role.getY())].object == "road"
-	&& Math.abs(Math.round(Role.getY()) - Role.getY()) <= BorderTolerance) {
-		Role.MoveRight(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.floor(Role.getX())+1][Math.round(Role.getY())].object == "wall") {
-			Role.setX(Math.floor(Role.getX()));
+	// 填充角色可視迷宮資訊
+	for(var x = -Math.round(ViewableGrid - offsetX); x <= Math.round(ViewableGrid + offsetX); ++x) {
+		Info.Maze.push([]);
+		for(var y = -Math.round(ViewableGrid - offsetY); y <= Math.round(ViewableGrid + offsetX); ++y) {
+			if(IsOutOfMaze(AIMaze[IntZ], IntX + x, IntY + y && Math.abs(Z - IntZ) < 0.1)) {
+				Info.Maze[x + Math.round(ViewableGrid - offsetX)].push("Border");
+			}
+			else if(distance2d(x,y,offsetX,offsetY) <= ViewScope && Math.abs(Z - IntZ) < 0.1) {
+				Info.Maze[x + Math.round(ViewableGrid - offsetX)].push(AIMaze[IntZ][IntX + x][IntY + y]);
+			}
+			else {
+				Info.Maze[x + Math.round(ViewableGrid - offsetX)].push("unknown");
+			}
 		}
 	}
-	else {
-		Role.setX(Math.round(Role.getX()));
-	}
-	if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY())-1].object == "road"
-	&& Math.abs(Math.round(Role.getX()) - Role.getX()) <= BorderTolerance) {
-		Role.MoveUp(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY())-1].object == "wall") {
-			Role.setY( Math.ceil( Role.getY()));
-		}
-	}
-	else {
-		Role.setY(Math.round(Role.getY()));
-	}
-}
 
-function MoveRightDown(Role) {
-	if(GameScene.GetMaze()[Math.floor(Role.getX())+1][Math.round(Role.getY())].object == "road"
-	&& Math.abs(Math.round(Role.getY()) - Role.getY()) <= BorderTolerance) {
-		Role.MoveRight(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.floor(Role.getX())+1][Math.round(Role.getY())].object == "wall") {
-			Role.setX(Math.floor(Role.getX()));
+	// 填充其它可視玩家資訊
+	for(var PlayerNum = 0; PlayerNum < Roles.length; ++PlayerNum) {
+		if(AIRole != Roles[PlayerNum]){
+			if(AIRole.getZ() == Roles[PlayerNum].getZ() && distance2d(X, Y, Roles[PlayerNum].getX(), Roles[PlayerNum].getY()) <= ViewScope && Roles[PlayerNum].GetState() != "invisible") {
+				Info.OtherPlayers.push({Name : Roles[PlayerNum].GetOperator().GetName(), 
+											   RelativeX : Roles[PlayerNum].getX() - X, 
+											   RelativeY : Roles[PlayerNum].getY() - Y});
+			}
+			else {
+				Info.OtherPlayers.push({Name : Roles[PlayerNum].GetOperator().GetName(),
+											   RelativeX : "unknown",
+											   RelativeY : "unknown"});
+			}
 		}
 	}
-	else {
-		Role.setX(Math.round(Role.getX()));
-	}
-	if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY()+offset)-1].object == "road"
-	&& Math.abs(Math.round(Role.getX()) - Role.getX()) <= BorderTolerance) {
-		Role.MoveDown(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY()+offset)-1].object == "wall") {
-			Role.setY(Math.floor(Role.getY()+offset) );
-		}
-	}
-	else {
-		Role.setY(Math.round(Role.getY()));
-	}
-}
 
-function MoveLeftDown(Role) {
-	if(GameScene.GetMaze()[Math.floor(Role.getX()-offset)+1][Math.round(Role.getY())].object == "road"
-	&& Math.abs(Math.round(Role.getY()) - Role.getY()) <= BorderTolerance) {
-		Role.MoveLeft(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.floor(Role.getX()-offset)+1][Math.round(Role.getY())].object == "wall") {
-			Role.setX(Math.ceil(Role.getX()-offset));
-		}
-	}
-	else {
-		Role.setX(Math.round(Role.getX()));
-	}
-	if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY()+offset)-1].object == "road"
-	&& Math.abs(Math.round(Role.getX()) - Role.getX()) <= BorderTolerance) {
-		Role.MoveDown(1/Math.sqrt(2));
-		if(GameScene.GetMaze()[Math.round(Role.getX())][Math.ceil(Role.getY()+offset)-1].object== "wall") {
-			Role.setY(Math.floor(Role.getY()+offset) );
-		}
-	}
-	else {
-		Role.setY(Math.round(Role.getY()));
-	}
+	return Info;
 }
-*/
 
 // 這裡寫得不好
 function PositionCorrection(maze, Role) {
-	if(Role.getX() < 0) {
-		Role.setX(1);
-	}
-	if(Role.getY() < 0) {
-		Role.setY(1);
-	}
-	if(Role.getX()  > maze.length-1) {
-		Role.setX(maze.length-2);
-	}
-	if(Role.getY() > maze[Math.round(Role.getX())].length-1) {
-		Role.setY(maze[Math.round(Role.getX())].length-2);
-	}
 	if(maze[Math.floor(Role.getX())][Math.round(Role.getY())].object == "wall") {
 		Role.setX(Math.ceil(Role.getX()));
 	}
@@ -774,26 +556,69 @@ function LoadImage() {
 	MazeWallRightPassageUp.src = "images\\MazeWallRightPassageUp.png";
 	MazeWallDownPassageUp.src = "images\\MazeWallDownPassageUp.png";
 	MazeWallLeftPassageUp.src = "images\\MazeWallLeftPassageUp.png";
-	test.src = "images\\test.png";
-	test2.src = "images\\test2.png";
 	treasure.src = "images\\treasure.png";
 	exit.src = "images\\exit.png";
 	ItemBorder.src = "images\\ItemBorder.png";
-	// Item_SpeedShoes.src = "images\\SpeedShoes.png";
 	flash.src = "images\\flash.png";
-	sheep.src = "images\\sheep.png";
-	wolf.src = "images\\wolf.png";
+	blue.src = "images\\sheep.png";
+	black.src = "images\\wolf.png";
+	goldcoin.src = "images\\GoldCoin.png";
+	silvercoin.src = "images\\SilverCoin.png";
+	bronzecoin.src = "images\\BronzeCoin.png";
+	unknown.src = "images\\unknown.png";
 }
 
-function ObjectPositionInitialization(maze, RoleList) {
-	for(var RoleNumber = 0; RoleNumber <= RoleList.length-1; ++RoleNumber) {
-		while(maze[RoleList[RoleNumber].getZ()][RoleList[RoleNumber].getX()][RoleList[RoleNumber].getY()].object != "road") {
-			RoleList[RoleNumber].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-		}
-		RoleList[RoleNumber].SetPrePosition(RoleList[RoleNumber].getX(), RoleList[RoleNumber].getY(), RoleList[RoleNumber].getZ());
+// 給定一位置與一迷宮平面, 判斷該位置是否在迷宮之外
+function IsOutOfMaze(maze, x, y) {
+	if(x < 0 || y < 0 || x > maze.length - 1 || y > maze[x].length - 1) {
+		return true;
 	}
-	WaitDrawObjects.objects[0].SetPosition(RoleList[0].getX(), RoleList[0].getY(), RoleList[0].getZ());
-	do{
-		WaitDrawObjects.objects[1].SetPosition(RandomNum(1, maze[0].length-2), RandomNum(1, maze[0][0].length-2), RandomNum(0, maze.length-1));
-	}while(maze[WaitDrawObjects.objects[1].getZ()][WaitDrawObjects.objects[1].getX()][WaitDrawObjects.objects[1].getY()].object != "road") 
+	else {
+		return false;
+	}
+}
+
+// 回傳距離(二維)
+function distance2d(x1, y1, x2, y2) {
+	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+}
+
+// 回傳距離(三維)
+function distance3d(x1, y1, z1, x2, y2, z2) {
+	return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2) + Math.pow(z1 - z2, 2));
+}
+
+// 回傳一位置，該位置必須在ObjectList內所有物件位置的半徑之外，並且在道路上
+function PositionGenerator(maze, ObjectList, radius) {
+	var i = -1;
+	var times = 0;
+	while(i != ObjectList.length) {
+		if(++times > 1000) {
+			return false;
+		}
+		var position = {x : RandomNum(1, maze[0].length-2), y : RandomNum(1, maze[0][0].length-2), z : RandomNum(0, maze.length-1)};
+		while(maze[position.z][position.x][position.y].object != "road") {
+			position = {x : RandomNum(1, maze[0].length-2), y : RandomNum(1, maze[0][0].length-2), z : RandomNum(0, maze.length-1)};
+		}
+		for(i = 0; i < ObjectList.length; ++i) {
+			if(distance3d(position.x, position.y, position.z, ObjectList[i].getX(), ObjectList[i].getY(), ObjectList[i].getZ()) <= radius) {
+				break;
+			}
+		}
+	}
+	return position;
+}
+
+// 檢查物件清單，需要時刪除元素
+function check(objects) {
+	for(var i = 0; i < objects.length; ++i) {
+		if(objects[i].GetState() == "vanish") {
+			objects.splice(i, 1);
+		}
+	}
+}
+
+// 檢查是否是整數
+function IsInt(value) {
+	return ((Math.round(value) - value) == 0) ? true : false;
 }
